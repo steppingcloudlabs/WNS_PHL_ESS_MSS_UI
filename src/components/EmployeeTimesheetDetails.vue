@@ -1,10 +1,10 @@
 <script setup>
 
-import { Download, Expand, ListTree, ToggleLeft, ChevronDown, Trash, ChevronUp, Check, Pencil } from 'lucide-vue-next';
+import { Download, Expand, ListTree, ToggleLeft, ChevronDown, Trash, ChevronUp, Check, Pencil, Search } from 'lucide-vue-next';
 import { ref, computed, onMounted, onUnmounted, watch, } from 'vue';
 
 
- 
+const emit = defineEmits(['edit', 'save', 'approve', 'reject']);
 
 // Demo Data 
 const timesheetData = ref([
@@ -266,8 +266,14 @@ const timesheetData = ref([
     },
 ]);
 
+
+// props to handle colums for view, edit and approve
 const props = defineProps({
     isEditable: {
+        type: Boolean,
+        default: false
+    },
+    isApproval: {
         type: Boolean,
         default: false
     },
@@ -286,13 +292,26 @@ watch(
         if (newFromDate && newToDate) {
             // Implement your filtering logic here
             // console.log(newFromDate, newToDate);
-            
+
         }
     }
 )
 
-
 const isFullscreen = ref(false);
+const searchQuery = ref('');
+const activeSearch = ref('');
+
+const handleSearch = () => {
+
+    activeSearch.value = searchQuery.value.trim();
+};
+
+const handleKeyPress = (event) => {
+    if (event.key === 'Enter') {
+        handleSearch();
+    }
+};
+
 const filters = ref({
     regularization: '',
     otStatus: '',
@@ -303,41 +322,47 @@ const filters = ref({
 // filtering data
 const filteredTimesheetData = computed(() => {
     return timesheetData.value.filter((item) => {
-
-       // Date filtering
-       const [itemDay, itemMonth, itemYear] = item.shiftDate.split('/');
-        
-        const itemDate = new Date(Number('20' + itemYear), Number(itemMonth) - 1, Number(itemDay));
+        // Date filtering
+        const [itemDay, itemMonth, itemYear] = item.shiftDate?.split('/') || [];
+        const itemDate = itemDay ? new Date(Number('20' + itemYear), Number(itemMonth) - 1, Number(itemDay)) : null;
 
         let isWithinDateRange = true;
         if (props.fromDate && props.toDate) {
             const fromDateObj = new Date(props.fromDate);
             const toDateObj = new Date(props.toDate);
-            
-            
+
             fromDateObj.setHours(0, 0, 0, 0);
             toDateObj.setHours(0, 0, 0, 0);
-            itemDate.setHours(0, 0, 0, 0);
-            
+            itemDate?.setHours(0, 0, 0, 0);
+
             isWithinDateRange = itemDate >= fromDateObj && itemDate <= toDateObj;
         }
 
+        // Search filtering
+        const searchTerm = activeSearch.value.toLowerCase();
+        const matchesSearch = !searchTerm ||
+            ['regularizationStatus', 'otStatus', 'meal', 'transport'].some(key => {
+                const value = item[key];
+                return value?.toLowerCase().includes(searchTerm);
+            });
+
+        // Other filters
         const matchesRegularization =
-            !filters.value.regularization || item.regularizationStatus.toLowerCase() === filters.value.regularization.toLowerCase();
+            !filters.value.regularization || item.regularizationStatus?.toLowerCase() === filters.value.regularization.toLowerCase();
 
         const matchesOtStatus =
-            !filters.value.otStatus || item.otStatus.toLowerCase() === filters.value.otStatus.toLowerCase();
+            !filters.value.otStatus || item.otStatus?.toLowerCase() === filters.value.otStatus.toLowerCase();
 
         const matchesMeal =
-            !filters.value.meal || item.meal.toLowerCase() === filters.value.meal.toLowerCase();
+            !filters.value.meal || item.meal?.toLowerCase() === filters.value.meal.toLowerCase();
 
         const matchesTransport =
-            !filters.value.transport || item.transport.toLowerCase() === filters.value.transport.toLowerCase();
+            !filters.value.transport || item.transport?.toLowerCase() === filters.value.transport.toLowerCase();
 
-        return isWithinDateRange && matchesRegularization && matchesOtStatus && matchesMeal && matchesTransport;
+        return isWithinDateRange && matchesSearch && matchesRegularization && matchesOtStatus && matchesMeal && matchesTransport;
     });
 });
-
+// COLUMS CONTROLS
 const columns = ref([
     { key: 'srNo', label: 'Sr.No', visible: true },
     { key: 'shiftDate', label: 'Shift Date', visible: true },
@@ -366,6 +391,18 @@ if (props.isEditable) {
     });
 }
 
+// approval column 
+if (props.isApproval) {
+    columns.value.unshift({
+        key: 'approvalActions',
+        label: 'Approve/Reject',
+        visible: true,
+        locked: true
+    });
+}
+
+
+
 // edit and save 
 const handleSave = (item) => {
     emit('save', item);
@@ -373,6 +410,16 @@ const handleSave = (item) => {
 
 const handleEdit = (item) => {
     emit('edit', item);
+};
+
+
+// approve / reject
+const handleApprove = (item) => {
+    emit('approve', item);
+};
+
+const handleReject = (item) => {
+    emit('reject', item);
 };
 
 
@@ -448,17 +495,36 @@ const sortedData = computed(() => {
 
     if (sortBy.value) {
         data.sort((a, b) => {
-
             let aValue = a[sortBy.value];
             let bValue = b[sortBy.value];
 
+            // Handle date fields
+            if (['shiftDate'].includes(sortBy.value)) {
+                // Convert DD/MM/YY to Date object
+                const [aDay, aMonth, aYear] = aValue.split('/');
+                const [bDay, bMonth, bYear] = bValue.split('/');
 
-            if (['shiftDate', 'inDateTime', 'outDateTime'].includes(sortBy.value)) {
-                aValue = new Date(aValue);
-                bValue = new Date(bValue);
+                aValue = new Date(Number('20' + aYear), Number(aMonth) - 1, Number(aDay));
+                bValue = new Date(Number('20' + bYear), Number(bMonth) - 1, Number(bDay));
             }
 
+            // Handle datetime fields
+            if (['inDateTime', 'outDateTime'].includes(sortBy.value)) {
+                // Convert DD/MM/YY HH:mm to Date object
+                const [aDate, aTime] = aValue.split(' ');
+                const [bDate, bTime] = bValue.split(' ');
 
+                const [aDay, aMonth, aYear] = aDate.split('/');
+                const [bDay, bMonth, bYear] = bDate.split('/');
+
+                const [aHour, aMinute] = aTime.split(':');
+                const [bHour, bMinute] = bTime.split(':');
+
+                aValue = new Date(Number('20' + aYear), Number(aMonth) - 1, Number(aDay), Number(aHour), Number(aMinute));
+                bValue = new Date(Number('20' + bYear), Number(bMonth) - 1, Number(bDay), Number(bHour), Number(bMinute));
+            }
+
+            // Handle time duration fields
             if (['tardiness', 'undertime', 'otHours'].includes(sortBy.value)) {
                 aValue = aValue.split(':').reduce((acc, time) => (60 * acc) + +time, 0);
                 bValue = bValue.split(':').reduce((acc, time) => (60 * acc) + +time, 0);
@@ -466,7 +532,6 @@ const sortedData = computed(() => {
 
             if (aValue < bValue) return sortDesc.value ? 1 : -1;
             if (aValue > bValue) return sortDesc.value ? -1 : 1;
-
             return 0;
         });
     }
@@ -496,10 +561,14 @@ const toggleSort = (columnKey) => {
 
             <div class=" md:w-auto flex flex-row gap-4 items-stretch md:items-center">
                 <!-- Search -->
-                <div class="w-full md:w-64">
-                    <input
+                <div class="w-full md:w-64 flex items-center gap-2">
+                    <input v-model="searchQuery" @keyup.enter="handleSearch"
                         class="w-full border border-neutral-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                        type="text" placeholder="Search">
+                        type="text" placeholder="Search status (press Enter)">
+                    <button @click="handleSearch"
+                        class="px-3 py-3 bg-orange-500 text-white rounded-md hover:bg-orange-600">
+                        <Search class="w-5 h-5" />
+                    </button>
                 </div>
 
                 <!-- Action buttons -->
@@ -692,12 +761,29 @@ const toggleSort = (columnKey) => {
                                     </button>
                                 </div>
                             </template>
+                            <template v-if="column.key === 'approvalActions'">
+    <div class="flex items-center gap-2">
+        <button 
+            v-if="item.regularizationStatus !== 'Approved'"
+            @click="handleApprove(item)"
+            class="px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-xs"
+        >
+            Approve
+        </button>
+        <button 
+            v-if="item.regularizationStatus !== 'Rejected'"
+            @click="handleReject(item)"
+            class="px-2 py-1 bg-rose-500 text-white rounded hover:bg-rose-600 text-xs"
+        >
+            Reject
+        </button>
+    </div>
+</template>
                         </td>
                     </tr>
                 </tbody>
             </table>
         </div>
-
 
         <!-- pagination handle -->
         <div class="flex items-center justify-between px-4 py-3 bg-white border-t border-gray-200">
@@ -747,6 +833,8 @@ const toggleSort = (columnKey) => {
 
     </div>
 </template>
+
+
 
 <style scoped>
 /* Improved scrollbar styling */

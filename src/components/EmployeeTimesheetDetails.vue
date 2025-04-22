@@ -277,8 +277,6 @@ const fetchTimesheetData = async () => {
     
     try {
         const response = await getTimesheetData({
-            fromDate: props.fromDate,
-            toDate: props.toDate
         });
         
         if (response.success) {

@@ -1,25 +1,26 @@
 <script setup>
-import { Minus, Plus, RefreshCw, Search } from 'lucide-vue-next';
-import { ref } from 'vue';
-import EmployeeTimesheetDetails from './EmployeeTimesheetDetails.vue';
+    
+    import { Minus, Plus, RefreshCw, Search } from 'lucide-vue-next';
+    import { ref } from 'vue';
+    import EmployeeTimesheetDetails from './EmployeeTimesheetDetails.vue';
 
-
-
-const fromDate = ref('');
-const toDate = ref('');
 const toggleFilter = ref(false);
-
 const handleToggleFilter = () => {
     toggleFilter.value = !toggleFilter.value;
 };
 
+const fd = ref("");
+const td = ref("");
+const fromDate = ref('');
+const toDate = ref('');
 const reserDateFilter = () => {
     fromDate.value = ""
     toDate.value = ""
 }
-
-
 const dateSearch = () => {
+    fromDate.value = fd.value;
+    toDate.value = td.value;
+    
     if (!fromDate.value || !toDate.value) {
         alert('Please select both dates');
         return;
@@ -28,8 +29,7 @@ const dateSearch = () => {
         alert('From date cannot be after To date');
         return;
     }
-
-    
+    console.log(fromDate, toDate); 
 };
 
 
@@ -60,7 +60,7 @@ const dateSearch = () => {
                     <label class="block mb-2 text-gray-700">From Date</label>
                     <input 
                         type="date" 
-                        v-model="fromDate"
+                        v-model="fd"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                     >
                 </div>
@@ -71,7 +71,7 @@ const dateSearch = () => {
                     <div class="flex items-center gap-x-2">
                         <input 
                             type="date" 
-                            v-model="toDate"
+                            v-model="td"
                             class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                         >
                         <button 

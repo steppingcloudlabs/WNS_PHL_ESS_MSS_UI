@@ -1,20 +1,19 @@
 <script setup>
-
-import { Download, Expand, ListTree, ToggleLeft, ChevronDown, Trash, ChevronUp, Check, Pencil, Search } from 'lucide-vue-next';
+import { Download, Expand, ListTree, ToggleLeft, ChevronDown, Trash, ChevronUp, Check, Pencil, Search, Edit } from 'lucide-vue-next';
 import { ref, computed, onMounted, onUnmounted, watch, } from 'vue';
-
 
 const emit = defineEmits(['edit', 'save', 'approve', 'reject']);
 
 // Demo Data 
-const timesheetData = ref([
+const timesheetData = ref(
+[
     {
         srNo: 1,
         shiftDate: '05/03/25',
         shift: '09:00-06:00',
         inDateTime: '05/03/24 08:45',
         outDateTime: '05/03/24 17:30',
-        regularizationStatus: 'Approved',
+        attendenceStatus: 'Approved',
         tardiness: '00:15',
         undertime: '00:00',
         otHours: '02:00',
@@ -30,7 +29,7 @@ const timesheetData = ref([
         shift: '09:00-05:00',
         inDateTime: '12/03/24 22:00',
         outDateTime: '13/03/24 06:00',
-        regularizationStatus: 'Pending',
+        attendenceStatus: 'Pending',
         tardiness: '00:30',
         undertime: '00:00',
         otHours: '01:30',
@@ -46,7 +45,7 @@ const timesheetData = ref([
         shift: '09:00-06:00',
         inDateTime: '18/03/24 13:00',
         outDateTime: '18/03/24 21:00',
-        regularizationStatus: 'Rejected',
+        attendenceStatus: 'Rejected',
         tardiness: '00:10',
         undertime: '00:30',
         otHours: '00:00',
@@ -62,7 +61,7 @@ const timesheetData = ref([
         shift: '08:00-05:00',
         inDateTime: '08/03/24 09:30',
         outDateTime: '08/03/24 18:00',
-        regularizationStatus: 'Approved',
+        attendenceStatus: 'Approved',
         tardiness: '00:20',
         undertime: '00:10',
         otHours: '01:00',
@@ -78,7 +77,7 @@ const timesheetData = ref([
         shift: '09:00-06:00',
         inDateTime: '22/03/24 23:00',
         outDateTime: '23/03/24 07:00',
-        regularizationStatus: 'Pending',
+        attendenceStatus: 'Pending',
         tardiness: '00:05',
         undertime: '00:20',
         otHours: '02:30',
@@ -94,7 +93,7 @@ const timesheetData = ref([
         shift: '09:00-06:00',
         inDateTime: '11/03/24 12:45',
         outDateTime: '11/03/24 20:30',
-        regularizationStatus: 'Approved',
+        attendenceStatus: 'Approved',
         tardiness: '00:00',
         undertime: '00:00',
         otHours: '01:15',
@@ -110,7 +109,7 @@ const timesheetData = ref([
         shift: '09:00-06:00',
         inDateTime: '15/03/24 08:00',
         outDateTime: '15/03/24 16:30',
-        regularizationStatus: 'Rejected',
+        attendenceStatus: 'Rejected',
         tardiness: '00:25',
         undertime: '00:15',
         otHours: '00:45',
@@ -126,7 +125,7 @@ const timesheetData = ref([
         shift: '09:00-06:00',
         inDateTime: '29/03/24 22:30',
         outDateTime: '30/03/24 06:30',
-        regularizationStatus: 'Approved',
+        attendenceStatus: 'Approved',
         tardiness: '00:10',
         undertime: '00:00',
         otHours: '02:00',
@@ -142,7 +141,7 @@ const timesheetData = ref([
         shift: '09:00-06:00',
         inDateTime: '07/03/24 14:00',
         outDateTime: '07/03/24 22:00',
-        regularizationStatus: 'Pending',
+        attendenceStatus: 'Pending',
         tardiness: '00:05',
         undertime: '00:10',
         otHours: '00:30',
@@ -158,7 +157,7 @@ const timesheetData = ref([
         shift: '09:00-06:00',
         inDateTime: '01/03/24 07:45',
         outDateTime: '01/03/24 16:15',
-        regularizationStatus: 'Rejected',
+        attendenceStatus: 'Rejected',
         tardiness: '00:35',
         undertime: '00:20',
         otHours: '01:00',
@@ -174,7 +173,7 @@ const timesheetData = ref([
         shift: '09:00-06:00',
         inDateTime: '20/03/24 09:00',
         outDateTime: '20/03/24 18:00',
-        regularizationStatus: 'Approved',
+        attendenceStatus: 'Approved',
         tardiness: '00:00',
         undertime: '00:00',
         otHours: '00:45',
@@ -190,7 +189,7 @@ const timesheetData = ref([
         shift: '09:00-06:00',
         inDateTime: '10/03/24 21:30',
         outDateTime: '11/03/24 05:30',
-        regularizationStatus: 'Pending',
+        attendenceStatus: 'Pending',
         tardiness: '00:10',
         undertime: '00:00',
         otHours: '01:15',
@@ -206,7 +205,7 @@ const timesheetData = ref([
         shift: '09:00-06:00',
         inDateTime: '17/03/24 13:45',
         outDateTime: '17/03/24 22:30',
-        regularizationStatus: 'Rejected',
+        attendenceStatus: 'Rejected',
         tardiness: '00:20',
         undertime: '00:30',
         otHours: '00:00',
@@ -222,7 +221,7 @@ const timesheetData = ref([
         shift: '09:00-06:00',
         inDateTime: '25/03/24 08:30',
         outDateTime: '25/03/24 17:45',
-        regularizationStatus: 'Approved',
+        attendenceStatus: 'Approved',
         tardiness: '00:10',
         undertime: '00:00',
         otHours: '02:30',
@@ -238,7 +237,7 @@ const timesheetData = ref([
         shift: '09:00-06:00',
         inDateTime: '05/03/24 08:45',
         outDateTime: '05/03/24 17:30',
-        regularizationStatus: 'Approved',
+        attendenceStatus: 'Approved',
         tardiness: '00:15',
         undertime: '00:00',
         otHours: '02:00',
@@ -254,7 +253,7 @@ const timesheetData = ref([
         shift: '09:00-06:00',
         inDateTime: '05/03/24 08:45',
         outDateTime: '05/03/24 17:30',
-        regularizationStatus: 'Approved',
+        attendenceStatus: 'Approved',
         tardiness: '00:15',
         undertime: '00:00',
         otHours: '02:00',
@@ -266,6 +265,40 @@ const timesheetData = ref([
     },
 ]);
 
+// const timesheetData = ref([]);
+// const loading = ref(false);
+// const error = ref(null);
+
+// Add function to fetch timesheet data
+// const fetchTimesheetData = async () => {
+//     loading.value = true;
+//     error.value = null;
+    
+//     try {
+//         const response = await getTimesheetData({
+//             fromDate: props.fromDate,
+//             toDate: props.toDate
+//         });
+        
+//         if (response.success) {
+//             timesheetData.value = response.data;
+//         } else {
+//             error.value = response.message;
+//             // Optionally show error message to user
+//             console.error('Failed to fetch timesheet data:', response.message);
+//         }
+//     } catch (err) {
+//         error.value = 'An error occurred while fetching timesheet data';
+//         console.error('Error:', err);
+//     } finally {
+//         loading.value = false;
+//     }
+// };
+
+// Fetch data when component mounts
+// onMounted(() => {
+//     fetchTimesheetData();
+// });
 
 // props to handle colums for view, edit and approve
 const props = defineProps({
@@ -285,7 +318,6 @@ const props = defineProps({
     }
 });
 
-
 watch(
     [() => props.fromDate, () => props.toDate],
     ([newFromDate, newToDate]) => {
@@ -298,19 +330,10 @@ watch(
 )
 
 const isFullscreen = ref(false);
-const searchQuery = ref('');
+
 const activeSearch = ref('');
 
-const handleSearch = () => {
 
-    activeSearch.value = searchQuery.value.trim();
-};
-
-const handleKeyPress = (event) => {
-    if (event.key === 'Enter') {
-        handleSearch();
-    }
-};
 
 const filters = ref({
     regularization: '',
@@ -341,14 +364,14 @@ const filteredTimesheetData = computed(() => {
         // Search filtering
         const searchTerm = activeSearch.value.toLowerCase();
         const matchesSearch = !searchTerm ||
-            ['regularizationStatus', 'otStatus', 'meal', 'transport'].some(key => {
+            ['attendenceStatus', 'otStatus', 'meal', 'transport'].some(key => {
                 const value = item[key];
                 return value?.toLowerCase().includes(searchTerm);
             });
 
         // Other filters
         const matchesRegularization =
-            !filters.value.regularization || item.regularizationStatus?.toLowerCase() === filters.value.regularization.toLowerCase();
+            !filters.value.regularization || item.attendenceStatus?.toLowerCase() === filters.value.regularization.toLowerCase();
 
         const matchesOtStatus =
             !filters.value.otStatus || item.otStatus?.toLowerCase() === filters.value.otStatus.toLowerCase();
@@ -364,12 +387,12 @@ const filteredTimesheetData = computed(() => {
 });
 // COLUMS CONTROLS
 const columns = ref([
-    { key: 'srNo', label: 'Sr.No', visible: true },
+    // { key: 'srNo', label: 'Sr.No', visible: true },
     { key: 'shiftDate', label: 'Shift Date', visible: true },
     { key: 'shift', label: 'Shift', visible: true },
     { key: 'inDateTime', label: 'In', visible: true },
     { key: 'outDateTime', label: 'Out', visible: true },
-    { key: 'regularizationStatus', label: 'Reg Status', visible: true },
+    { key: 'attendenceStatus', label: 'Attendence Status', visible: true },
     { key: 'tardiness', label: 'Tardiness', visible: true },
     { key: 'undertime', label: 'Undertime', visible: true },
     { key: 'otHours', label: 'OT Hours', visible: true },
@@ -378,8 +401,8 @@ const columns = ref([
     { key: 'nd2', label: 'ND2', visible: true },
     { key: 'meal', label: 'Meal', visible: true },
     { key: 'transport', label: 'Transport', visible: true }
-]);
 
+]);
 
 // Add actions column if editable
 if (props.isEditable) {
@@ -391,7 +414,7 @@ if (props.isEditable) {
     });
 }
 
-// approval column 
+// approval column if Approval
 if (props.isApproval) {
     columns.value.unshift({
         key: 'approvalActions',
@@ -401,17 +424,15 @@ if (props.isApproval) {
     });
 }
 
-
-
 // edit and save 
 const handleSave = (item) => {
     emit('save', item);
 };
 
 const handleEdit = (item) => {
-    emit('edit', item);
+    // emit('edit', item);
+    console.log(item);
 };
-
 
 // approve / reject
 const handleApprove = (item) => {
@@ -421,7 +442,6 @@ const handleApprove = (item) => {
 const handleReject = (item) => {
     emit('reject', item);
 };
-
 
 const showColumnSelector = ref(false);
 const isListView = ref(false);
@@ -464,22 +484,17 @@ const toggleView = () => {
 const currentPage = ref(1);
 const rowsPerPage = ref(10);
 const rowsPerPageOptions = [10, 20, 50, 100];
-
-
 const totalPages = computed(() => {
     return Math.ceil(filteredTimesheetData.value.length / rowsPerPage.value);
 });
-
 const paginatedData = computed(() => {
     const start = (currentPage.value - 1) * rowsPerPage.value;
     const end = start + rowsPerPage.value;
     return sortedData.value.slice(start, end);
 });
-
 const changePage = (page) => {
     currentPage.value = page;
 };
-
 const changeRowsPerPage = (rows) => {
     rowsPerPage.value = rows;
     currentPage.value = 1;
@@ -548,6 +563,8 @@ const toggleSort = (columnKey) => {
     }
 };
 
+
+
 </script>
 
 <template>
@@ -560,16 +577,6 @@ const toggleSort = (columnKey) => {
 
 
             <div class=" md:w-auto flex flex-row gap-4 items-stretch md:items-center">
-                <!-- Search -->
-                <div class="w-full md:w-64 flex items-center gap-2">
-                    <input v-model="searchQuery" @keyup.enter="handleSearch"
-                        class="w-full border border-neutral-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                        type="text" placeholder="Search status (press Enter)">
-                    <button @click="handleSearch"
-                        class="px-3 py-3 bg-orange-500 text-white rounded-md hover:bg-orange-600">
-                        <Search class="w-5 h-5" />
-                    </button>
-                </div>
 
                 <!-- Action buttons -->
                 <div class="flex  gap-2 bg-neutral-200 border border-neutral-400 rounded-lg p-1">
@@ -623,7 +630,7 @@ const toggleSort = (columnKey) => {
         <div v-if="!isListView" class="px-4 py-2 bg-gray-100 border-t border-b mb-10">
             <div class="flex flex-wrap gap-4 justify-center text-sm">
                 <div class="flex items-center gap-2">
-                    <label class="font-medium">Regularization:</label>
+                    <label class="font-medium">Attendence</label>
                     <select v-model="filters.regularization"
                         class="rounded-md border-gray-300 text-sm focus:ring-orange-500">
                         <option value="">All</option>
@@ -671,7 +678,7 @@ const toggleSort = (columnKey) => {
                 <div v-for="column in visibleColumns" :key="column.key" class="grid grid-cols-2 gap-2 py-1">
                     <span class="font-semibold text-sm">{{ column.label }}:</span>
                     <span class="text-sm text-gray-800">
-                        <template v-if="column.key === 'regularizationStatus' || column.key === 'otStatus'">
+                        <template v-if="column.key === 'attendenceStatus' || column.key === 'otStatus'">
                             <span :class="[
                                 'px-2 py-1 rounded-full text-xs font-medium inline-block',
                                 row[column.key] === 'Approved' ? 'bg-green-100 text-green-800' : '',
@@ -691,7 +698,7 @@ const toggleSort = (columnKey) => {
 
         <!-- Table View -->
         <div v-else class="overflow-x-auto pb-4">
-            <table class="table-auto min-w-full divide-y divide-gray-200">
+            <table class="table-auto min-w-full divide-y  divide-gray-200">
                 <thead class="bg-gray-50 sticky top-0 z-10">
                     <tr>
                         <th v-for="column in visibleColumns" :key="column.key"
@@ -701,7 +708,7 @@ const toggleSort = (columnKey) => {
                                 'w-auto min-w-[50px]': ['shift', 'nd1', 'nd2', 'meal', 'transport'].includes(column.key),
                                 'w-auto min-w-[50px]': ['tardiness', 'undertime', 'otHours'].includes(column.key),
                                 'w-auto min-w-[50px]': ['shiftDate', 'inDateTime', 'outDateTime'].includes(column.key),
-                                'w-auto min-w-[50px]': ['regularizationStatus', 'otStatus'].includes(column.key)
+                                'w-auto min-w-[50px]': ['attendenceStatus', 'attendence Status'].includes(column.key)
                             }" @click="toggleSort(column.key)">
                             <div class="flex items-center justify-between gap-2">
                                 <span>{{ column.label }}</span>
@@ -714,12 +721,12 @@ const toggleSort = (columnKey) => {
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
-                    <tr v-for="item in paginatedData" :key="item.srNo" class="hover:bg-gray-50">
+                    <tr v-for="item in paginatedData" :key="item.srNo" class="divide-x divide-gray-200 hover:bg-gray-50">
                         <td v-for="column in visibleColumns" :key="column.key"
-                            class="px-3 py-3 text-xs whitespace-nowrap" :class="{
+                            class="px-3 py-3 text-xs whitespace-nowrap " :class="{
                                 'text-center': ['srNo', 'nd1', 'nd2', 'meal', 'transport'].includes(column.key)
                             }">
-                            <template v-if="column.key === 'regularizationStatus'">
+                            <template v-if="column.key === 'attendenceStatus'">
                                 <span :class="[
                                     'px-2 py-1  text-xs font-medium inline-block',
                                     item[column.key] === 'Approved' ? 'bg-green-100 text-green-800' : '',
@@ -749,12 +756,12 @@ const toggleSort = (columnKey) => {
                             <!-- <eidt or save -->
                             <template v-if="column.key === 'actions' && props.isEditable">
                                 <div class="flex items-center gap-2 justify-center">
-                                    <button v-if="item.regularizationStatus === 'Pending'" @click="handleSave(item)"
+                                    <button v-if="item.attendenceStatus === 'Pending'" @click="handleEdit(item)"
                                         class="p-1 hover:bg-green-100 rounded text-green-600" title="Approve">
                                         <Check class="w-4 h-4" />
                                     </button>
                                     <button
-                                        v-if="item.regularizationStatus === 'Approved' || item.regularizationStatus === 'Rejected'"
+                                        v-if="item.attendenceStatus === 'Approved' || item.attendenceStatus === 'Rejected'"
                                         @click="handleEdit(item)" class="p-1 hover:bg-red-100 rounded text-red-600"
                                         title="Reject">
                                         <Pencil class="w-4 h-4" />
@@ -764,14 +771,14 @@ const toggleSort = (columnKey) => {
                             <template v-if="column.key === 'approvalActions'">
     <div class="flex items-center gap-2">
         <button 
-            v-if="item.regularizationStatus !== 'Approved'"
+            v-if="item.attendenceStatus !== 'Approved'"
             @click="handleApprove(item)"
             class="px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-xs"
         >
             Approve
         </button>
         <button 
-            v-if="item.regularizationStatus !== 'Rejected'"
+            v-if="item.attendenceStatus !== 'Rejected'"
             @click="handleReject(item)"
             class="px-2 py-1 bg-rose-500 text-white rounded hover:bg-rose-600 text-xs"
         >

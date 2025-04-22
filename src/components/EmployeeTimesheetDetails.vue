@@ -272,6 +272,7 @@ const error = ref(null);
 
 // Add function to fetch timesheet data
 const fetchTimesheetData = async () => {
+    
     loading.value = true;
     error.value = null;
     

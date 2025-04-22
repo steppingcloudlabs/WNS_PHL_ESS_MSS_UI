@@ -1,6 +1,7 @@
 <script setup>
 import { Download, Expand, ListTree, ToggleLeft, ChevronDown, Trash, ChevronUp, Check, Pencil, Search, Edit } from 'lucide-vue-next';
 import { ref, computed, onMounted, onUnmounted, watch, } from 'vue';
+import { getTimesheetData } from '../api/timeSheet';
 
 const emit = defineEmits(['edit', 'save', 'approve', 'reject']);
 
@@ -265,40 +266,43 @@ const timesheetData = ref(
     },
 ]);
 
-// const timesheetData = ref([]);
-// const loading = ref(false);
-// const error = ref(null);
+const timesheetData1 = ref([]);
+const loading = ref(false);
+const error = ref(null);
 
 // Add function to fetch timesheet data
-// const fetchTimesheetData = async () => {
-//     loading.value = true;
-//     error.value = null;
+const fetchTimesheetData = async () => {
+    loading.value = true;
+    error.value = null;
     
-//     try {
-//         const response = await getTimesheetData({
-//             fromDate: props.fromDate,
-//             toDate: props.toDate
-//         });
+    try {
+        const response = await getTimesheetData({
+            fromDate: props.fromDate,
+            toDate: props.toDate
+        });
         
-//         if (response.success) {
-//             timesheetData.value = response.data;
-//         } else {
-//             error.value = response.message;
-//             // Optionally show error message to user
-//             console.error('Failed to fetch timesheet data:', response.message);
-//         }
-//     } catch (err) {
-//         error.value = 'An error occurred while fetching timesheet data';
-//         console.error('Error:', err);
-//     } finally {
-//         loading.value = false;
-//     }
-// };
+        if (response.success) {
+            console.log("api response: ", response.data);
+            timesheetData1.value = response.data;
+        } else {
+            error.value = response.message;
+            // Optionally show error message to user
+            console.error('Failed to fetch timesheet data:', response.message);
+        }
+    } catch (err) {
+        error.value = 'An error occurred while fetching timesheet data';
+        console.error('Error:', err);
+    } finally {
+        loading.value = false;
+    }
+};
 
 // Fetch data when component mounts
-// onMounted(() => {
-//     fetchTimesheetData();
-// });
+onMounted(() => {
+    fetchTimesheetData();
+});
+
+
 
 // props to handle colums for view, edit and approve
 const props = defineProps({

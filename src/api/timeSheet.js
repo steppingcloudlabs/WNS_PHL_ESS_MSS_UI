@@ -6,7 +6,7 @@ export const getTimesheetData = async (params = {}) => {
     try {
         const response = await axios({
             method: 'GET',
-            url: `${BASE_URL}/timesheet`,
+            url: `http://localhost:4004/rest/catalog-service-rest/employeeTimeSheet`,
             // params: params,
             headers: {
                 'Content-Type': 'application/json'

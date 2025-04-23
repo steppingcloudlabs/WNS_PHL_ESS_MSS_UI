@@ -1,25 +1,43 @@
 <script setup>
 import { ref } from 'vue';
 import EmployeeTimesheetDetails from '../components/EmployeeTimesheetDetails.vue';
-import { Search } from 'lucide-vue-next';
+import { RefreshCw, Search } from 'lucide-vue-next';
 
-const fromDate = ref("")
-const toDate = ref("")
 const searchQuery = ref("");
-
-const handleEdit = ()=>{
-    console.log("eidt")
-}
-
-const handleSave = ()=>{
-    console.log("save")
-}
 
 const handleSearch = () => {
     // filter the timesheet data based on the search query and date range
     // update the timesheetData array accordingly
-    console.log(searchQuery, toDate, fromDate)
+    console.log(searchQuery.value, toDate, fromDate)
 }
+
+const fd = ref("");
+const td = ref("");
+
+const fromDate = ref('');
+const toDate = ref('');
+
+const reserDateFilter = () => {
+    fromDate.value = ""
+    toDate.value = ""
+}
+
+
+const dateSearch = () => {
+    fromDate.value = fd.value;
+    toDate.value = td.value;
+    
+    if (!fromDate.value || !toDate.value) {
+        alert('Please select both dates');
+        return;
+    }
+    if (fromDate.value > toDate.value) {
+        alert('From date cannot be after To date');
+        return;
+    }
+    console.log(fromDate, toDate); 
+};
+
 
 </script>
 
@@ -47,7 +65,7 @@ const handleSearch = () => {
                 <!-- from date -->
                 <div class="flex-1 min-w-0">
                     <label class="block mb-2 text-gray-700">From Date</label>
-                    <input type="date" v-model="fromDate"
+                    <input type="date" v-model="fd"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent">
                 </div>
 
@@ -55,7 +73,7 @@ const handleSearch = () => {
                 <div class="flex-1 min-w-0">
                     <label class="block mb-2 text-gray-700">To Date</label>
                     <div class="flex items-center gap-x-2">
-                        <input type="date" v-model="toDate"
+                        <input type="date" v-model="td"
                             class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent">
                     </div>
                 </div>
@@ -66,13 +84,13 @@ const handleSearch = () => {
             <!-- handle search -->
         <div class="mt-4 p-3 flex justify-end gap-x-3 bg-neutral-200">
             
-            <button @click="handleSearch"
+            <button @click="dateSearch"
                 class="inline-flex items-center px-4 py-2 border border-transparent text-lg font-medium rounded-md text-white bg-rose-500 hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ">
                 <Search class="w-5 h-5 mr-2" /> Search
             </button>
-            <button @click="handleSearch"
+            <button @click="reserDateFilter"
                 class="inline-flex items-center px-4 py-2 border border-transparent text-lg font-medium rounded-md text-white bg-rose-500 hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ">
-                <Search class="w-5 h-5 mr-2" /> Reset
+                <RefreshCw class="w-5 h-5 mr-2" />Reset
             </button>
 
         </div>
@@ -83,8 +101,8 @@ const handleSearch = () => {
         <div class="mt-6  w-[100%] ">
             <EmployeeTimesheetDetails 
                 :is-editable="true"
-                @edit="handleEdit"
-                @save="handleSave"
+                :fromDate="fromDate"
+                :toDate="toDate"
             />
         </div>
     </div>

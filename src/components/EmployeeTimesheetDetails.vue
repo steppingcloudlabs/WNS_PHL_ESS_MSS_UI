@@ -2,17 +2,14 @@
 import { Download, Expand, ListTree, ToggleLeft, ChevronDown, Trash, ChevronUp, Check, Pencil, Search, Edit } from 'lucide-vue-next';
 import { ref, computed, onMounted, onUnmounted, watch, } from 'vue';
 import { getTimesheetData } from '../api/timeSheet';
-import {getUserRole} from "../store/module/userModule"
 
 
 const emit = defineEmits(['edit', 'save', 'approve', 'reject']);
-
 
 const timesheetData = ref([]);
 const loading = ref(false);
 const error = ref(null);
 
-getUserRole();
 
 // Add function to fetch timesheet data
 const fetchTimesheetData = async () => {
@@ -25,8 +22,6 @@ const fetchTimesheetData = async () => {
         });
 
         if (response.success) {
-
-
 
             console.log("api response.data: ", response.data);
             timesheetData.value = await response.data.result;

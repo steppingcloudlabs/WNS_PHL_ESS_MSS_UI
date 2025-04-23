@@ -13,7 +13,8 @@ export const useUserStore = defineStore('user', {
     managerName: '',
     managerEmail: '',
     isManager: false,
-    reportees: []
+    reportees: [],
+    TimesheetData : []
   }),
 
   getters: {
@@ -29,7 +30,7 @@ export const useUserStore = defineStore('user', {
 
   actions: {
     setUser(data) {
-      console.log("setting user: ",data)
+      console.log("setting user full anme : ",data.defaultFullName)
       this.userId = data.UserId
       this.fullName = data.defaultFullName
       this.email = data.email
@@ -43,6 +44,8 @@ export const useUserStore = defineStore('user', {
       this.isManager = data.isManager
       this.reportees = data.Reportees || []
     },
+
+    
 
     clearUser() {
       this.$reset()

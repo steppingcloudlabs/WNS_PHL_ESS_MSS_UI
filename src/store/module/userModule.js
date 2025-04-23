@@ -4,6 +4,44 @@ import { useUserStore } from '../userStore';
 
 import constant from "../constanrSys"
 
+// export const getTimesheetData = async (params = {}) => {
+
+//   const userStore = useUserStore();
+//   const userid = userStore.userId;
+  
+//   console.log("user id :: ", userid);
+
+//   try {
+//       const response = await axios({
+//           method: 'GET',
+//           url: `${constant.endpoint}/rest/catalog-service-rest/employeeTimeSheet`,
+//           params: {
+//               USERID:userid,
+//               STARTDATE:"2025-02-09",
+//               ENDDATE:"2025-02-16"
+//           },
+//           headers: {
+//               'Content-Type': 'application/json'
+//           }
+//       });
+      
+//       return {
+//           success: true,
+//           data: response.data,
+//           message: 'Timesheet data fetched successfully'
+//       };
+//   } catch (error) {
+      
+//       return {
+//           success: false,
+//           data: null,
+//           message: error.response?.data?.message || 'Failed to fetch timesheet data',
+//           error: error.response?.data || error.message
+//       };
+  
+//   }
+// };
+
 export const getUserRole = async () => {
   const userStore = useUserStore()
 
@@ -11,7 +49,7 @@ export const getUserRole = async () => {
   userStore.setUser("hello data demo");
 
   try {
-    const response = await axios.get(`${constant.endpoint}rest/catalog-service-rest/getUserRole`, {
+    const response = await axios.get(`${constant.endpoint}/rest/catalog-service-rest/getUserRole`, {
       headers: {
         // Add auth token if needed
         // 'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -22,9 +60,9 @@ export const getUserRole = async () => {
     if (response.status === 200 && response.data.status === "200") {
         // useUserStore.setUser(response.data.result);
         
-        useUserStore.setUser("hello data");
+        userStore.setUser(response.data.result);
         console.log("user data : ", response.data);
-      return { success: true, data: response.data.result }
+        return { success: true, data: response.data.result }
     } else {
       return { success: false, error: 'Invalid status code or response format' }
     }

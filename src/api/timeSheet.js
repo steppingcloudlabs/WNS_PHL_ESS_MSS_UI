@@ -1,12 +1,32 @@
 import axios from 'axios';
 import constant from "../store/constanrSys"
+import { useUserStore } from '../store/userStore';
+
+
 export const getTimesheetData = async (params = {}) => {
-    // console.log("endpiint : ",endpoint);
+
+    const userStore = useUserStore();
+    const userid = userStore.userId;
+    
+    console.log("user id :: ", userid);
+
+    if (!userid){
+        return {
+            success: false,
+            data: null,
+            message:  'Failed to fetch timesheet data',
+        };
+    }
     try {
         const response = await axios({
             method: 'GET',
-            url: `${constant.endpoint}/rest/catalog-service-rest/employeeTimeSheet?USERID=395234&STARTDATE=2025-02-09&ENDDATE=2025-02-16`,
-            // params: params,
+            url: `${constant.endpoint}/rest/catalog-service-rest/employeeTimeSheet`,
+            params: {
+                // USERID:userid || "395234",
+                USERID: "395234",
+                STARTDATE:"2025-02-09",
+                ENDDATE:"2025-02-16"
+            },
             headers: {
                 'Content-Type': 'application/json'
             }

@@ -1,6 +1,7 @@
 <script setup>
 import { AlignJustify, Power, UserRound } from 'lucide-vue-next';
 import { ref } from 'vue';
+import { useUserStore } from '../store/userStore';
 
 const isOpen = ref(true);
 const emit = defineEmits(['toggle-sidebar']);
@@ -8,7 +9,12 @@ const emit = defineEmits(['toggle-sidebar']);
 const toggleSidebar = () => {
   isOpen.value = !isOpen.value;
   emit('toggle-sidebar', isOpen.value);
+
 };
+
+const userStore = useUserStore();
+
+
 </script>
 
 <template>
@@ -26,8 +32,8 @@ const toggleSidebar = () => {
       </div>
 
       <div class="flex justify-center items-start flex-col text-xs gap-y-1 mx-4">
-        <div>Mark Jacob</div>
-        <div>U123456</div>
+        <div>{{ userStore.fullName}}</div>
+        <div>{{ userStore.userId }}</div>
       </div>
       
       <button class=" hover:cursor-pointer md:mr-8 p-2 hover:bg-[#e66f00] rounded-lg transition-colors">

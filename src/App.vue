@@ -69,7 +69,7 @@ const handleSidebarToggle = () => {
         class="sticky top-0 z-10 border-b border-gray-200 "
         :class="{
           '': isSidebarOpen && !isMobile,
-          'md:ml-16': !isSidebarOpen && !isMobile
+          'md:ml-16 ': !isSidebarOpen && !isMobile
         }"
       />
 

@@ -16,7 +16,6 @@ const toggleSidebar = () => {
     <button 
       @click="toggleSidebar"
       class="p-2 hover:cursor-pointer"
-      
     >
       <AlignJustify class="w-5 h-5"/>
     </button>

@@ -2,287 +2,35 @@
 import { Download, Expand, ListTree, ToggleLeft, ChevronDown, Trash, ChevronUp, Check, Pencil, Search, Edit } from 'lucide-vue-next';
 import { ref, computed, onMounted, onUnmounted, watch, } from 'vue';
 import { getTimesheetData } from '../api/timeSheet';
+import {getUserRole} from "../store/module/userModule"
+
 
 const emit = defineEmits(['edit', 'save', 'approve', 'reject']);
 
-// Demo Data 
-const timesheetData = ref(
-[
-    {
-        srNo: 1,
-        shiftDate: '05/03/25',
-        shift: '09:00-06:00',
-        inDateTime: '05/03/24 08:40',
-        outDateTime: '05/03/24 17:30',
-        attendenceStatus: 'Approved',
-        tardiness: '00:15',
-        undertime: '00:00',
-        otHours: '02:00',
-        otStatus: 'Applied',
-        nd1: '7',
-        nd2: '4',
-        meal: 'Applied',
-        transport: 'Approved'
-    },
-    {
-        srNo: 2,
-        shiftDate: '12/03/25',
-        shift: '09:00-05:00',
-        inDateTime: '12/03/24 22:00',
-        outDateTime: '13/03/24 06:00',
-        attendenceStatus: 'Pending',
-        tardiness: '00:30',
-        undertime: '00:00',
-        otHours: '01:30',
-        otStatus: 'Approved',
-        nd1: '3',
-        nd2: '4',
-        meal: 'Applied',
-        transport: 'Applied'
-    },
-    {
-        srNo: 3,
-        shiftDate: '18/03/25',
-        shift: '09:00-06:00',
-        inDateTime: '18/03/24 13:00',
-        outDateTime: '18/03/24 21:00',
-        attendenceStatus: 'Rejected',
-        tardiness: '00:10',
-        undertime: '00:30',
-        otHours: '00:00',
-        otStatus: 'Approved',
-        nd1: '5',
-        nd2: '2',
-        meal: 'Approved',
-        transport: 'Applied'
-    },
-    {
-        srNo: 4,
-        shiftDate: '08/03/25',
-        shift: '08:00-05:00',
-        inDateTime: '08/03/24 09:30',
-        outDateTime: '08/03/24 18:00',
-        attendenceStatus: 'Approved',
-        tardiness: '00:20',
-        undertime: '00:10',
-        otHours: '01:00',
-        otStatus: 'Applied',
-        nd1: '1',
-        nd2: '3',
-        meal: 'Approved',
-        transport: 'Applied'
-    },
-    {
-        srNo: 5,
-        shiftDate: '22/03/25',
-        shift: '09:00-06:00',
-        inDateTime: '22/03/24 23:00',
-        outDateTime: '23/03/24 07:00',
-        attendenceStatus: 'Pending',
-        tardiness: '00:05',
-        undertime: '00:20',
-        otHours: '02:30',
-        otStatus: 'Approved',
-        nd1: '3',
-        nd2: '7',
-        meal: 'Applied',
-        transport: 'Approved',
-    },
-    {
-        srNo: 6,
-        shiftDate: '11/03/25',
-        shift: '09:00-06:00',
-        inDateTime: '11/03/24 12:45',
-        outDateTime: '11/03/24 20:30',
-        attendenceStatus: 'Approved',
-        tardiness: '00:00',
-        undertime: '00:00',
-        otHours: '01:15',
-        otStatus: 'Applied',
-        nd1: '1',
-        nd2: '2',
-        meal: 'Approved',
-        transport: 'Applied'
-    },
-    {
-        srNo: 7,
-        shiftDate: '15/03/25',
-        shift: '09:00-06:00',
-        inDateTime: '15/03/24 08:00',
-        outDateTime: '15/03/24 16:30',
-        attendenceStatus: 'Rejected',
-        tardiness: '00:25',
-        undertime: '00:15',
-        otHours: '00:45',
-        otStatus: 'Applied',
-        nd1: '3',
-        nd2: '4',
-        meal: 'Approved',
-        transport: 'Approved',
-    },
-    {
-        srNo: 8,
-        shiftDate: '29/03/25',
-        shift: '09:00-06:00',
-        inDateTime: '29/03/24 22:30',
-        outDateTime: '30/03/24 06:30',
-        attendenceStatus: 'Approved',
-        tardiness: '00:10',
-        undertime: '00:00',
-        otHours: '02:00',
-        otStatus: 'Approved',
-        nd1: '3',
-        nd2: '1',
-        meal: 'Applied',
-        transport: 'Applied',
-    },
-    {
-        srNo: 9,
-        shiftDate: '07/03/25',
-        shift: '09:00-06:00',
-        inDateTime: '07/03/24 14:00',
-        outDateTime: '07/03/24 22:00',
-        attendenceStatus: 'Pending',
-        tardiness: '00:05',
-        undertime: '00:10',
-        otHours: '00:30',
-        otStatus: 'Applied',
-        nd1: '1',
-        nd2: '7',
-        meal: 'Applied',
-        transport: 'Applied'
-    },
-    {
-        srNo: 10,
-        shiftDate: '01/03/25',
-        shift: '09:00-06:00',
-        inDateTime: '01/03/24 07:45',
-        outDateTime: '01/03/24 16:15',
-        attendenceStatus: 'Rejected',
-        tardiness: '00:35',
-        undertime: '00:20',
-        otHours: '01:00',
-        otStatus: 'Approved',
-        nd1: '3',
-        nd2: '2',
-        meal: 'Approved',
-        transport: 'Applied'
-    },
-    {
-        srNo: 11,
-        shiftDate: '20/03/25',
-        shift: '09:00-06:00',
-        inDateTime: '20/03/24 09:00',
-        outDateTime: '20/03/24 18:00',
-        attendenceStatus: 'Approved',
-        tardiness: '00:00',
-        undertime: '00:00',
-        otHours: '00:45',
-        otStatus: 'Approved',
-        nd1: '3',
-        nd2: '1',
-        meal: 'Approved',
-        transport: 'Applied'
-    },
-    {
-        srNo: 12,
-        shiftDate: '10/03/25',
-        shift: '09:00-06:00',
-        inDateTime: '10/03/24 21:30',
-        outDateTime: '11/03/24 05:30',
-        attendenceStatus: 'Pending',
-        tardiness: '00:10',
-        undertime: '00:00',
-        otHours: '01:15',
-        otStatus: 'Approved',
-        nd1: '1',
-        nd2: '2',
-        meal: 'Applied',
-        transport: 'Approved',
-    },
-    {
-        srNo: 13,
-        shiftDate: '17/03/25',
-        shift: '09:00-06:00',
-        inDateTime: '17/03/24 13:45',
-        outDateTime: '17/03/24 22:30',
-        attendenceStatus: 'Rejected',
-        tardiness: '00:20',
-        undertime: '00:30',
-        otHours: '00:00',
-        otStatus: 'Approved',
-        nd1: '3',
-        nd2: '4',
-        meal: 'Applied',
-        transport: 'Approved',
-    },
-    {
-        srNo: 14,
-        shiftDate: '25/03/25',
-        shift: '09:00-06:00',
-        inDateTime: '25/03/24 08:30',
-        outDateTime: '25/03/24 17:45',
-        attendenceStatus: 'Approved',
-        tardiness: '00:10',
-        undertime: '00:00',
-        otHours: '02:30',
-        otStatus: 'Approved',
-        nd1: '5',
-        nd2: '4',
-        meal: 'Approved',
-        transport: 'Applied',
-    },
-    {
-        srNo: 15,
-        shiftDate: '05/03/25',
-        shift: '09:00-06:00',
-        inDateTime: '05/03/24 08:45',
-        outDateTime: '05/03/24 17:30',
-        attendenceStatus: 'Approved',
-        tardiness: '00:15',
-        undertime: '00:00',
-        otHours: '02:00',
-        otStatus: 'Approved',
-        nd1: '5',
-        nd2: '4',
-        meal: 'Applied',
-        transport: 'Approved',
-    },
-    {
-        srNo: 16,
-        shiftDate: '05/03/25',
-        shift: '09:00-06:00',
-        inDateTime: '05/03/24 08:45',
-        outDateTime: '05/03/24 17:30',
-        attendenceStatus: 'Approved',
-        tardiness: '00:15',
-        undertime: '00:00',
-        otHours: '02:00',
-        otStatus: 'Applied',
-        nd1: '3',
-        nd2: '4',
-        meal: 'Approved',
-        transport: 'Applied'
-    },
-]);
 
-const timesheetData1 = ref([]);
+const timesheetData = ref([]);
 const loading = ref(false);
 const error = ref(null);
 
+getUserRole();
+
 // Add function to fetch timesheet data
 const fetchTimesheetData = async () => {
-    
+
     loading.value = true;
     error.value = null;
-    
+
     try {
         const response = await getTimesheetData({
         });
-        
+
         if (response.success) {
+
+
+
             console.log("api response.data: ", response.data);
-            timesheetData1.value = response.data;
+            timesheetData.value = await response.data.result;
+
         } else {
             error.value = response.message;
             // Optionally show error message to user
@@ -336,8 +84,6 @@ const isFullscreen = ref(false);
 
 const activeSearch = ref('');
 
-
-
 const filters = ref({
     regularization: '',
     otStatus: '',
@@ -349,17 +95,17 @@ const filters = ref({
 const filteredTimesheetData = computed(() => {
     return timesheetData.value.filter((item) => {
         // Date filtering
-        const [itemDay, itemMonth, itemYear] = item.shiftDate?.split('/') || [];
-        const itemDate = itemDay ? new Date(Number('20' + itemYear), Number(itemMonth) - 1, Number(itemDay)) : null;
-
         let isWithinDateRange = true;
-        if (props.fromDate && props.toDate) {
+        if (props.fromDate && props.toDate && item.startDate) {
+            // Convert item.startDate to Date object
+            const itemDate = new Date(item.startDate);
             const fromDateObj = new Date(props.fromDate);
             const toDateObj = new Date(props.toDate);
 
+            // Reset time portion for accurate date comparison
             fromDateObj.setHours(0, 0, 0, 0);
             toDateObj.setHours(0, 0, 0, 0);
-            itemDate?.setHours(0, 0, 0, 0);
+            itemDate.setHours(0, 0, 0, 0);
 
             isWithinDateRange = itemDate >= fromDateObj && itemDate <= toDateObj;
         }
@@ -367,7 +113,7 @@ const filteredTimesheetData = computed(() => {
         // Search filtering
         const searchTerm = activeSearch.value.toLowerCase();
         const matchesSearch = !searchTerm ||
-            ['attendenceStatus', 'otStatus', 'meal', 'transport'].some(key => {
+            ['RegStatus', 'OTStatus', 'Meal', 'Transport'].some(key => {
                 const value = item[key];
                 return value?.toLowerCase().includes(searchTerm);
             });
@@ -388,24 +134,42 @@ const filteredTimesheetData = computed(() => {
         return isWithinDateRange && matchesSearch && matchesRegularization && matchesOtStatus && matchesMeal && matchesTransport;
     });
 });
+
 // COLUMS CONTROLS
 const columns = ref([
     // { key: 'srNo', label: 'Sr.No', visible: true },
-    { key: 'shiftDate', label: 'Shift Date', visible: true },
-    { key: 'shift', label: 'Shift', visible: true },
-    { key: 'inDateTime', label: 'In', visible: true },
-    { key: 'outDateTime', label: 'Out', visible: true },
-    { key: 'attendenceStatus', label: 'Attendence Status', visible: true },
-    { key: 'tardiness', label: 'Tardiness', visible: true },
-    { key: 'undertime', label: 'Undertime', visible: true },
-    { key: 'otHours', label: 'OT Hours', visible: true },
-    { key: 'otStatus', label: 'OT Status', visible: true },
-    { key: 'nd1', label: 'ND1', visible: true },
-    { key: 'nd2', label: 'ND2', visible: true },
-    { key: 'meal', label: 'Meal', visible: true },
-    { key: 'transport', label: 'Transport', visible: true }
+    { key: 'startDate', label: 'Shift Date', visible: true },
+    { key: 'ShiftId', label: 'Shift', visible: true },
+    { key: 'inTime', label: 'in Time', visible: true },
+    { key: 'outTime', label: 'out Time', visible: true },
+    { key: 'RegStatus', label: 'Attendence Status', visible: true },
+    { key: 'Tardiness', label: 'Tardiness', visible: true },
+    { key: 'Undertime', label: 'Undertime', visible: true },
+    { key: 'OTHours', label: 'OT Hours', visible: true },
+    { key: 'OTStatus', label: 'OT Status', visible: true },
+    { key: 'ND1', label: 'ND1', visible: true },
+    { key: 'ND2', label: 'ND2', visible: true },
+    { key: 'Meal', label: 'Meal', visible: true },
+    { key: 'Transport', label: 'Transport', visible: true }
 
 ]);
+
+
+// date Format
+const formatISODuration = (duration) => {
+    if (!duration) return '';
+    
+    // Handle PT0S case
+    if (duration === 'PT0S') return '00:00';
+    
+    const matches = duration.match(/PT(\d+H)?(\d+M)?(\d+S)?/);
+    if (!matches) return duration;
+    
+    const hours = matches[1] ? parseInt(matches[1]) : 0;
+    const minutes = matches[2] ? parseInt(matches[2]) : 0;
+    
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+};
 
 // Add actions column if editable
 if (props.isEditable) {
@@ -502,8 +266,6 @@ const changeRowsPerPage = (rows) => {
     rowsPerPage.value = rows;
     currentPage.value = 1;
 };
-
-
 // sorting by row
 const sortBy = ref('');
 const sortDesc = ref(false);
@@ -553,8 +315,8 @@ const sortedData = computed(() => {
             return 0;
         });
     }
-
     return data;
+
 });
 
 const toggleSort = (columnKey) => {
@@ -566,18 +328,26 @@ const toggleSort = (columnKey) => {
     }
 };
 
-
-
 </script>
 
 <template>
-    <div :class="{ ' fixed inset-0 z-50 bg-white overflow-auto': isFullscreen }" class="shadow-md rounded-lg mx-auto">
+    
+    <div v-if="loading" class="flex items-center justify-center min-h-[400px]">
+        <div class="flex flex-col items-center gap-4">
+            <div class="animate-spin rounded-full h-12 w-12 border-4 border-orange-500 border-t-transparent"> </div>
+            <span class="text-gray-600">Loading timesheet data... </span>
+        </div>
+    </div>
+
+    <div
+    v-if="!loading"
+     :class="{ ' fixed inset-0 z-50 bg-white overflow-auto': isFullscreen }"
+        class="shadow-md rounded-lg mx-auto">
         <div class="md:w-full p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
 
             <div class="text-lg font-semibold">
                 Employee Timesheet Details
             </div>
-
 
             <div class=" md:w-auto flex flex-row gap-4 items-stretch md:items-center">
 
@@ -606,7 +376,7 @@ const toggleSort = (columnKey) => {
 
                         <!-- Column Selector Dropdown -->
                         <div v-if="showColumnSelector"
-                            class="absolute md:right-0  mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                            class="absolute md:right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
                             <div class="p-4">
                                 <h3 class="text-sm font-semibold mb-2">Show/Hide Columns</h3>
                                 <div class="space-y-2 max-h-80 overflow-y-auto">
@@ -619,6 +389,7 @@ const toggleSort = (columnKey) => {
                                 </div>
                             </div>
                         </div>
+
                     </div>
                     <button class="p-1 hover:bg-neutral-300 rounded">
                         <Download class="w-5 h-5" />
@@ -630,7 +401,7 @@ const toggleSort = (columnKey) => {
         </div>
 
         <!-- Filters -->
-        <div v-if="!isListView" class="px-4 py-2 bg-gray-100 border-t border-b mb-10">
+        <div v-if="!isListView" class=" px-4 py-2 bg-gray-100 border-t border-b mb-10">
             <div class="flex flex-wrap gap-4 justify-center text-sm">
                 <div class="flex items-center gap-2">
                     <label class="font-medium">Attendence</label>
@@ -681,7 +452,7 @@ const toggleSort = (columnKey) => {
                 <div v-for="column in visibleColumns" :key="column.key" class="grid grid-cols-2 gap-2 py-1">
                     <span class="font-semibold text-sm">{{ column.label }}:</span>
                     <span class="text-sm text-gray-800">
-                        <template v-if="column.key === 'attendenceStatus' || column.key === 'otStatus'">
+                        <template v-if="column.key === 'RegStatus' || column.key === 'OTStatus'">
                             <span :class="[
                                 'px-2 py-1 rounded-full text-xs font-medium inline-block',
                                 row[column.key] === 'Approved' ? 'bg-green-100 text-green-800' : '',
@@ -691,6 +462,11 @@ const toggleSort = (columnKey) => {
                                 {{ row[column.key] }}
                             </span>
                         </template>
+
+                        <template v-if="column.key === 'inTime' || column.key === 'outTime'">
+        {{ formatISODuration(row[column.key]) }}
+    </template>
+                        
                         <template v-else>
                             {{ row[column.key] }}
                         </template>
@@ -708,10 +484,10 @@ const toggleSort = (columnKey) => {
                             class="px-3 py-3 hover:cursor-pointer text-left text-xs font-medium text-gray-500 whitespace-nowrap"
                             :class="{
                                 'w-auto min-w-[50px]': ['srNo'].includes(column.key),
-                                'w-auto min-w-[50px]': ['shift', 'nd1', 'nd2', 'meal', 'transport'].includes(column.key),
-                                'w-auto min-w-[50px]': ['tardiness', 'undertime', 'otHours'].includes(column.key),
-                                'w-auto min-w-[50px]': ['shiftDate', 'inDateTime', 'outDateTime'].includes(column.key),
-                                'w-auto min-w-[50px]': ['attendenceStatus', 'attendence Status'].includes(column.key)
+                                'w-auto min-w-[50px]': ['ShiftId', 'ND1', 'ND2', 'Meal', 'Transport'].includes(column.key),
+                                'w-auto min-w-[50px]': ['Tardiness', 'Undertime', 'OTHours'].includes(column.key),
+                                'w-auto min-w-[50px]': ['shiftDate', 'inTime', 'outTime'].includes(column.key),
+                                'w-auto min-w-[50px]': ['attendenceStatus', ' RegStatus'].includes(column.key)
                             }" @click="toggleSort(column.key)">
                             <div class="flex items-center justify-between gap-2">
                                 <span>{{ column.label }}</span>
@@ -724,12 +500,13 @@ const toggleSort = (columnKey) => {
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
-                    <tr v-for="item in paginatedData" :key="item.srNo" class="divide-x divide-gray-200 hover:bg-gray-50">
+                    <tr v-for="item in paginatedData" :key="item.srNo"
+                        class="divide-x divide-gray-200 hover:bg-gray-50">
                         <td v-for="column in visibleColumns" :key="column.key"
                             class="px-3 py-3 text-xs whitespace-nowrap " :class="{
                                 'text-center': ['srNo', 'nd1', 'nd2', 'meal', 'transport'].includes(column.key)
                             }">
-                            <template v-if="column.key === 'attendenceStatus'">
+                            <template v-if="column.key === 'RegStatus'">
                                 <span :class="[
                                     'px-2 py-1  text-xs font-medium inline-block',
                                     item[column.key] === 'Approved' ? 'bg-green-100 text-green-800' : '',
@@ -741,7 +518,7 @@ const toggleSort = (columnKey) => {
                             </template>
 
                             <template
-                                v-else-if="column.key === 'otStatus' || column.key === 'meal' || column.key === 'transport'">
+                                v-else-if="column.key === 'OTStatus' || column.key === 'Meal' || column.key === 'Transport'">
                                 <span :class="[
                                     'px-2 py-1 rounded-full text-xs font-semibold inline-block',
                                     item[column.key] === 'Approved' ? ' text-green-800' : '',
@@ -749,6 +526,10 @@ const toggleSort = (columnKey) => {
                                 ]">
                                     {{ item[column.key] }}
                                 </span>
+                            </template>
+
+                            <template v-else-if="column.key === 'inTime' || column.key === 'outTime'">
+                                {{ formatISODuration(item[column.key]) }}
                             </template>
 
 
@@ -772,23 +553,17 @@ const toggleSort = (columnKey) => {
                                 </div>
                             </template>
                             <template v-if="column.key === 'approvalActions'">
-    <div class="flex items-center gap-2">
-        <button 
-            v-if="item.attendenceStatus !== 'Approved'"
-            @click="handleApprove(item)"
-            class="px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-xs"
-        >
-            Approve
-        </button>
-        <button 
-            v-if="item.attendenceStatus !== 'Rejected'"
-            @click="handleReject(item)"
-            class="px-2 py-1 bg-rose-500 text-white rounded hover:bg-rose-600 text-xs"
-        >
-            Reject
-        </button>
-    </div>
-</template>
+                                <div class="flex items-center gap-2">
+                                    <button v-if="item.attendenceStatus !== 'Approved'" @click="handleApprove(item)"
+                                        class="px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-xs">
+                                        Approve
+                                    </button>
+                                    <button v-if="item.attendenceStatus !== 'Rejected'" @click="handleReject(item)"
+                                        class="px-2 py-1 bg-rose-500 text-white rounded hover:bg-rose-600 text-xs">
+                                        Reject
+                                    </button>
+                                </div>
+                            </template>
                         </td>
                     </tr>
                 </tbody>
@@ -842,6 +617,7 @@ const toggleSort = (columnKey) => {
         </div>
 
     </div>
+
 </template>
 
 

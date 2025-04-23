@@ -9,6 +9,18 @@ const handleToggleFilter = () => {
     toggleFilter.value = !toggleFilter.value;
 };
 
+const searchQueryEmployee = ref("");
+
+const sqe = ref("");
+
+const searchEmployee = () =>{
+    searchQueryEmployee.value = sqe.value;
+}
+
+console.log(searchQueryEmployee.value);
+console.log(sqe.value);
+
+
 const fd = ref("");
 const td = ref("");
 const fromDate = ref('');
@@ -27,11 +39,11 @@ const dateSearch = () => {
     }
     if (fromDate.value > toDate.value) {
         alert('From date cannot be after To date');
+        reserDateFilter();
         return;
     }
     console.log(fromDate, toDate); 
 };
-
 
 
 </script>
@@ -39,6 +51,22 @@ const dateSearch = () => {
 <template>
     <div class="w-full   px-4 sm:px-6 lg:px-8 mx-auto">
         <div class="text-lg font-semibold mb-2">View My Timesheet</div>
+
+        <!-- search -->
+            <div class="flex-1 min-w-0 my-4">
+                    <label class="block mb-2  text-gray-700">Employee Name / ID *</label>
+                    <div class="flex flex-row items-center">
+                        <input type="text" placeholder="Search Employee Name / ID" v-model="sqe"
+                        class="w-[300px] px-3 py-2 border-2 border-amber-600 rounded-md focus:outline-none "
+                        required
+                        >
+                        <div 
+                        @click="searchEmployee"
+                        class="ml-3 flex flex-row items-center text-xl bg-red-400 py-2 px-2 rounded-md" ><Search class="w-6 h-6" /> Search</div>
+                        <div class="ml-3 flex flex-row items-center text-xl bg-red-400 py-2 px-2 rounded-md" ><RefreshCw class="w-6 h-6" /> </div>
+                    </div>
+                    
+            </div>
 
         <!-- date filter -->
          

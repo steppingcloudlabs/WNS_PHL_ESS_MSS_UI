@@ -1,12 +1,11 @@
 import axios from 'axios';
-
-const BASE_URL = 'http://localhost:8080/api'; // Replace with your actual API URL
-
+import constant from "../store/constanrSys"
 export const getTimesheetData = async (params = {}) => {
+    // console.log("endpiint : ",endpoint);
     try {
         const response = await axios({
             method: 'GET',
-            url: `http://localhost:4004/rest/catalog-service-rest/employeeTimeSheet`,
+            url: `${constant.endpoint}/rest/catalog-service-rest/employeeTimeSheet?USERID=395234&STARTDATE=2025-02-09&ENDDATE=2025-02-16`,
             // params: params,
             headers: {
                 'Content-Type': 'application/json'
@@ -19,12 +18,14 @@ export const getTimesheetData = async (params = {}) => {
             message: 'Timesheet data fetched successfully'
         };
     } catch (error) {
+        
         return {
             success: false,
             data: null,
             message: error.response?.data?.message || 'Failed to fetch timesheet data',
             error: error.response?.data || error.message
         };
+    
     }
 };
 

@@ -1,32 +1,29 @@
 import axios from 'axios';
 import constant from "../store/constanrSys"
+import c2 from "../constant"
 import { useUserStore } from '../store/userStore';
 
 
-export const getTimesheetData = async (params = {}) => {
+export const getTimesheetData = async (USERId = null, startDate = null, endDate = null) => {
 
     const userStore = useUserStore();
-    const userid = userStore.userId;
-    
-    console.log("user id :: ", userid);
+    let userid = userStore.userId;
 
-    if (!userid){
-        return {
-            success: false,
-            data: null,
-            message:  'Failed to fetch timesheet data',
-        };
-    }
+    console.log("user id fro timesheet: ", USERId);
+
+    
+    console.log("user user id :: ", userid);
+
     try {
         const response = await axios({
             method: 'GET',
             url: `${constant.endpoint}/rest/catalog-service-rest/employeeTimeSheet`,
             params: {
-                // USERID:userid || "395234",
-                USERID: "395234",
-                STARTDATE:"2025-02-09",
-                ENDDATE:"2025-02-16"
+                USERID: c2.isLocal?"395234":USERId?USERId:userid,
+                STARTDATE: startDate || "2025-02-09",
+                ENDDATE: startDate || "2025-02-16"
             },
+            
             headers: {
                 'Content-Type': 'application/json'
             }

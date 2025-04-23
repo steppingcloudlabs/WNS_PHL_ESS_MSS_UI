@@ -13,7 +13,5 @@ export default {
 
     version: "0.1",
     lastBuild: "11-04-2025"
-    // New Attandance code added
-
  
 };

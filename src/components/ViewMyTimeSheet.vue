@@ -1,8 +1,10 @@
 <script setup>
     
     import { Minus, Plus, RefreshCw, Search } from 'lucide-vue-next';
-    import { ref } from 'vue';
+    import { computed, ref } from 'vue';
     import EmployeeTimesheetDetails from './EmployeeTimesheetDetails.vue';
+    import { getTimesheetData } from '../api/timeSheet';
+    import { useUserStore } from '../store/userStore';
 
 const toggleFilter = ref(false);
 const handleToggleFilter = () => {
@@ -13,9 +15,9 @@ const searchQueryEmployee = ref("");
 
 const sqe = ref("");
 
-const searchEmployee = () =>{
-    searchQueryEmployee.value = sqe.value;
-}
+// const searchEmployee = () =>{
+//     searchQueryEmployee.value = sqe.value;
+// }
 
 console.log(searchQueryEmployee.value);
 console.log(sqe.value);
@@ -30,8 +32,11 @@ const reserDateFilter = () => {
     toDate.value = ""
 }
 const dateSearch = () => {
+
     fromDate.value = fd.value;
     toDate.value = td.value;
+
+   
     
     if (!fromDate.value || !toDate.value) {
         alert('Please select both dates');
@@ -42,9 +47,42 @@ const dateSearch = () => {
         reserDateFilter();
         return;
     }
-    console.log(fromDate, toDate); 
+
+    getTimesheetData(fromDate.value, toDate.value);
+};
+const userStore = useUserStore();
+
+console.log("reporties: ",userStore.reportees)
+
+// Add computed property for filtered reportees
+const filteredReportees = computed(() => {
+    if (!sqe.value) return userStore.reportees;
+    return userStore.reportees.filter(reportee => 
+        reportee.defaultFullName.toLowerCase().includes(sqe.value.toLowerCase()) ||
+        reportee?.UserId?.toString().includes(sqe.value)
+    );
+});
+
+const showDropdown = ref(false);
+
+const selectReportee = (reportee) => {
+    sqe.value = reportee.defaultFullName;
+    console.log("Selected reportee:", reportee);
+    showDropdown.value = false;
+    // Pass the reportee's UserId to getTimesheetData
+    // getTimesheetData(reportee.userId, fromDate.value, toDate.value);
 };
 
+// Also update the searchEmployee function to use the selected reportee's data
+const searchEmployee = () => {
+    searchQueryEmployee.value = sqe.value;
+    const selectedReportee = userStore.reportees.find(
+        r => r.defaultFullName === sqe.value
+    );
+    if (selectedReportee) {
+        getTimesheetData(selectedReportee.userId, fromDate.value, toDate.value);
+    }
+};
 
 </script>
 
@@ -56,10 +94,29 @@ const dateSearch = () => {
             <div class="flex-1 min-w-0 my-4">
                     <label class="block mb-2  text-gray-700">Employee Name / ID *</label>
                     <div class="flex flex-row items-center">
-                        <input type="text" placeholder="Search Employee Name / ID" v-model="sqe"
-                        class="w-[300px] px-3 py-2 border-2 border-amber-600 rounded-md focus:outline-none "
-                        required
-                        >
+                        <div class="relative w-[300px]">
+                <input 
+                    type="text" 
+                    placeholder="Search Employee Name / ID" 
+                    v-model="sqe"
+                    @focus="showDropdown = true"
+                    class="w-full px-3 py-2 border-2 border-amber-600 rounded-md focus:outline-none"
+                    required
+                >
+                <!-- Dropdown list -->
+                <div v-if="showDropdown && filteredReportees.length > 0" 
+                    class="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                    <div 
+                        v-for="reportee in filteredReportees" 
+                        :key="reportee.UserId"
+                        @click="selectReportee(reportee)"
+                        class="px-4 py-2 hover:bg-gray-100 cursor-pointer flex justify-between items-center"
+                    >
+                        <span>{{ reportee.defaultFullName }}</span>
+                        <span class="text-sm text-gray-500">{{ reportee.UserId }}</span>
+                    </div>
+                </div>
+            </div>
                         <div 
                         @click="searchEmployee"
                         class="ml-3 flex flex-row items-center text-xl bg-red-400 py-2 px-2 rounded-md" ><Search class="w-6 h-6" /> Search</div>

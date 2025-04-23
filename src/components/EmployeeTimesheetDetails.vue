@@ -70,7 +70,6 @@ watch(
         if (newFromDate && newToDate) {
             // Implement your filtering logic here
             // console.log(newFromDate, newToDate);
-
         }
     }
 )

@@ -18,14 +18,16 @@ export const useUserStore = defineStore('user', {
   }),
 
   getters: {
-    userInfo: (state) => ({
+    userInfo : (state) => ({
       userId: state.userId,
       name: state.fullName,
       email: state.email,
       department: state.department,
       isManager: state.isManager
     }),
-    reporteeNames: (state) => state.reportees.map(r => r.defaultFullName).filter(name => !!name)
+    reporteeNames : (state) => state.reportees.map(r => r.defaultFullName).filter(name => !!name),
+    timesheetData : (state) => state.TimesheetData
+
   },
 
   actions: {

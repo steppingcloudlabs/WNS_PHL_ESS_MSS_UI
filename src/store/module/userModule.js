@@ -63,6 +63,7 @@ export const getUserRole = async () => {
         userStore.setUser(response.data.result);
         console.log("user data : ", response.data);
         return { success: true, data: response.data.result }
+        
     } else {
       return { success: false, error: 'Invalid status code or response format' }
     }

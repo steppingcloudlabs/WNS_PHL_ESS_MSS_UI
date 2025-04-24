@@ -34,7 +34,8 @@ const fromDate = ref('');
 const toDate = ref('');
 
 const reserDateFilter = () => {
-    getTimesheetData(null, defaultStartDate, defaultEndDate);
+
+    userStore.fetchTimesheet(null, defaultStartDate, defaultEndDate)
 
     fd.value=defaultStartDate;
     td.value=defaultEndDate;

@@ -50,5 +50,11 @@ defineProps({
                 </div>
             </RouterLink>
         </nav>
+
+        <div class="mt-[400px] ml-4">
+            <div>Version: 0.1</div>
+            <div>Last build : 24-04-2025</div>
+        </div>
+
     </aside>
 </template>

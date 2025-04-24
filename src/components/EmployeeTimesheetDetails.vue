@@ -2,6 +2,7 @@
 import { Download, Expand, ListTree, ToggleLeft, ChevronDown, Trash, ChevronUp, Check, Pencil, Search, Edit } from 'lucide-vue-next';
 import { ref, computed, onMounted, onUnmounted, watch, } from 'vue';
 import { getTimesheetData } from '../api/timeSheet';
+import { updateShift } from '../store/module/userModule';
 
 
 const emit = defineEmits(['edit', 'save', 'approve', 'reject']);
@@ -18,8 +19,7 @@ const fetchTimesheetData = async () => {
     error.value = null;
 
     try {
-        const response = await getTimesheetData({
-        });
+        const response = await getTimesheetData();
 
         if (response.success) {
 
@@ -152,16 +152,16 @@ const columns = ref([
 // date Format
 const formatISODuration = (duration) => {
     if (!duration) return '';
-    
+
     // Handle PT0S case
     if (duration === 'PT0S') return '00:00';
-    
+
     const matches = duration.match(/PT(\d+H)?(\d+M)?(\d+S)?/);
     if (!matches) return duration;
-    
+
     const hours = matches[1] ? parseInt(matches[1]) : 0;
     const minutes = matches[2] ? parseInt(matches[2]) : 0;
-    
+
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
 };
 
@@ -322,10 +322,26 @@ const toggleSort = (columnKey) => {
     }
 };
 
+const showShiftModal = ref(false);
+const selectedItem = ref(null);
+const newShiftId = ref('');
+
+
+const handleShiftClick = (item) => {
+    selectedItem.value = item;
+    newShiftId.value = item.ShiftId;
+    showShiftModal.value = true;
+};
+
+// ahift update function
+const Shift = async () => {
+    updateShift(selectedItem.value.userId, newShiftId.value);
+};
+
 </script>
 
 <template>
-    
+
     <div v-if="loading" class="flex items-center justify-center min-h-[400px]">
         <div class="flex flex-col items-center gap-4">
             <div class="animate-spin rounded-full h-12 w-12 border-4 border-orange-500 border-t-transparent"> </div>
@@ -333,9 +349,7 @@ const toggleSort = (columnKey) => {
         </div>
     </div>
 
-    <div
-    v-if="!loading"
-     :class="{ ' fixed inset-0 z-50 bg-white overflow-auto': isFullscreen }"
+    <div v-if="!loading" :class="{ ' fixed inset-0 z-50 bg-white overflow-auto': isFullscreen }"
         class="shadow-md rounded-lg mx-auto">
         <div class="md:w-full p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
 
@@ -458,9 +472,9 @@ const toggleSort = (columnKey) => {
                         </template>
 
                         <template v-if="column.key === 'inTime' || column.key === 'outTime'">
-        {{ formatISODuration(row[column.key]) }}
-    </template>
-                        
+                            {{ formatISODuration(row[column.key]) }}
+                        </template>
+
                         <template v-else>
                             {{ row[column.key] }}
                         </template>
@@ -509,6 +523,40 @@ const toggleSort = (columnKey) => {
                                 ]">
                                     {{ item[column.key] }}
                                 </span>
+                            </template>
+
+                            <!-- shift id and popup for update -->
+                            <template v-else-if="column.key === 'ShiftId'">
+                                <span @click="handleShiftClick(item)"
+                                    class="cursor-pointer hover:text-orange-500 hover:underline">
+                                    {{ item[column.key] }}
+                                </span>
+                                <div v-if="showShiftModal"
+                                    class="fixed inset-0  bg-opacity-30 flex items-center justify-center z-50">
+                                    <div class="bg-white rounded-lg p-6 w-96 shadow-xl">
+                                        <h3 class="text-lg font-semibold mb-4">Update Shift</h3>
+
+                                        <div class="mb-4">
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                                New Shift ID
+                                            </label>
+                                            <input type="text" v-model="newShiftId"
+                                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                                placeholder="Enter new shift ID">
+                                        </div>
+
+                                        <div class="flex justify-end gap-3">
+                                            <button @click="showShiftModal = false"
+                                                class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
+                                                Cancel
+                                            </button>
+                                            <button @click="Shift"
+                                                class="px-4 py-2 text-sm font-medium text-white bg-orange-500 rounded-md hover:bg-orange-600">
+                                                Update
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
                             </template>
 
                             <template

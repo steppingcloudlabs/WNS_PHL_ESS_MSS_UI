@@ -9,10 +9,10 @@ export const getTimesheetData = async (USERId = null, startDate = null, endDate 
     const userStore = useUserStore();
     let userid = userStore.userId;
 
-    console.log("user id fro timesheet: ", USERId);
+    console.log("user id fro timesheet dropdown: ", USERId);
+    console.log("user user id store :: ", userid);
 
-    
-    console.log("user user id :: ", userid);
+    console.log("startdate and enddate: ",startDate, endDate);
 
     try {
         const response = await axios({
@@ -20,8 +20,8 @@ export const getTimesheetData = async (USERId = null, startDate = null, endDate 
             url: `${constant.endpoint}/rest/catalog-service-rest/employeeTimeSheet`,
             params: {
                 USERID: c2.isLocal?"395234":USERId?USERId:userid,
-                STARTDATE: startDate || "2025-02-09",
-                ENDDATE: startDate || "2025-02-16"
+                STARTDATE: startDate?startDate: "2025-02-09",
+                ENDDATE: endDate?endDate : "2025-02-16"
             },
             
             headers: {

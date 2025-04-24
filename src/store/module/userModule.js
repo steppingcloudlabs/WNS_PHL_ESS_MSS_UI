@@ -1,46 +1,8 @@
 // src/api/user.js
 import axios from 'axios'
 import { useUserStore } from '../userStore';
-
-import constant from "../constanrSys"
-
-// export const getTimesheetData = async (params = {}) => {
-
-//   const userStore = useUserStore();
-//   const userid = userStore.userId;
-  
-//   console.log("user id :: ", userid);
-
-//   try {
-//       const response = await axios({
-//           method: 'GET',
-//           url: `${constant.endpoint}/rest/catalog-service-rest/employeeTimeSheet`,
-//           params: {
-//               USERID:userid,
-//               STARTDATE:"2025-02-09",
-//               ENDDATE:"2025-02-16"
-//           },
-//           headers: {
-//               'Content-Type': 'application/json'
-//           }
-//       });
-      
-//       return {
-//           success: true,
-//           data: response.data,
-//           message: 'Timesheet data fetched successfully'
-//       };
-//   } catch (error) {
-      
-//       return {
-//           success: false,
-//           data: null,
-//           message: error.response?.data?.message || 'Failed to fetch timesheet data',
-//           error: error.response?.data || error.message
-//       };
-  
-//   }
-// };
+import constant from "../constanrSys";
+import c2 from '../../constant'
 
 export const getUserRole = async () => {
   const userStore = useUserStore()
@@ -61,7 +23,6 @@ export const getUserRole = async () => {
         // useUserStore.setUser(response.data.result);
         
         userStore.setUser(response.data.result);
-        console.log("user data : ", response.data);
         return { success: true, data: response.data.result }
         
     } else {
@@ -82,6 +43,57 @@ export const getUserRole = async () => {
     return { success: false, error: message }
   }
 }
+
+export const getTimesheetData = async (USERId = null, startDate = null, endDate = null) => {
+  const userStore = useUserStore();   
+  let userid = userStore.userId;
+
+
+  console.log("user id from timesheet dropdown: ", USERId);
+  console.log("user user id from store :: ", userid);
+
+  console.log("startdate and enddate by user: ",startDate, endDate);
+
+  try {
+      const response = await axios({
+          method: 'GET',
+          url: `${constant.endpoint}/rest/catalog-service-rest/employeeTimeSheet`,
+          params: {
+              USERID: c2.isLocal?"395234":USERId?USERId:userid,
+              STARTDATE: startDate,
+              ENDDATE: endDate
+          },
+          
+          headers: {
+              'Content-Type': 'application/json'
+          }
+      });
+
+      console.log("response data from api : ",response.data)
+
+        if(response.status===200){
+          console.log("next step sending data to store");
+          userStore.setTimeSheet(response.data);
+        }
+        
+      
+
+      return {
+          success: true,
+          data: response.data,
+          message: 'Timesheet data fetched successfully'
+      };
+  } catch (error) {
+      
+      return {
+          success: false,
+          data: null,
+          message: error.response?.data?.message || 'Failed to fetch timesheet data',
+          error: error.response?.data || error.message
+      };
+  
+  }
+};
 
 export const updateShift = async (id, shiftid) => {
   console.log("updating shift:", id, shiftid);

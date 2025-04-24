@@ -1,48 +1,25 @@
 <script setup>
 import { Download, Expand, ListTree, ToggleLeft, ChevronDown, Trash, ChevronUp, Check, Pencil, Search, Edit } from 'lucide-vue-next';
 import { ref, computed, onMounted, onUnmounted, watch, } from 'vue';
-import { getTimesheetData } from '../api/timeSheet';
+import { getTimesheetData } from '../store/module/userModule';
 import { updateShift } from '../store/module/userModule';
+import { useUserStore } from '../store/userStore';
 
 
-const emit = defineEmits(['edit', 'save', 'approve', 'reject']);
+const userStore = useUserStore();
 
-const timesheetData = ref([]);
-const loading = ref(false);
-const error = ref(null);
+// Access data through computed property
+const timesheetData = computed(() => userStore.timesheetData);
 
 
-// Add function to fetch timesheet data
-const fetchTimesheetData = async () => {
-
-    loading.value = true;
-    error.value = null;
-
-    try {
-        const response = await getTimesheetData();
-
-        if (response.success) {
-
-            console.log("api response.data: ", response.data);
-            timesheetData.value = await response.data.result;
-
-        } else {
-            error.value = response.message;
-            // Optionally show error message to user
-            console.error('Failed to fetch timesheet data:', response.message);
-        }
-    } catch (err) {
-        error.value = 'An error occurred while fetching timesheet data';
-        console.error('Error:', err);
-    } finally {
-        loading.value = false;
-    }
-};
-
-// Fetch data when component mounts
-onMounted(() => {
-    fetchTimesheetData();
+console.log("user store data: ", timesheetData.value)
+// Load data when component mounts
+onMounted(async () => {
+  await userStore.fetchTimesheet();
+  console.log("Current timesheet data:", timesheetData.value);
 });
+
+
 
 
 
@@ -55,27 +32,14 @@ const props = defineProps({
     isApproval: {
         type: Boolean,
         default: false
-    },
-    fromDate: {
-        type: String,
-    },
-    toDate: {
-        type: String,
     }
 });
 
-watch(
-    [() => props.fromDate, () => props.toDate],
-    ([newFromDate, newToDate]) => {
-        if (newFromDate && newToDate) {
-            // Implement your filtering logic here
-            // console.log(newFromDate, newToDate);
-        }
-    }
-)
+
+
+
 
 const isFullscreen = ref(false);
-
 const activeSearch = ref('');
 
 const filters = ref({
@@ -87,45 +51,39 @@ const filters = ref({
 
 // filtering data
 const filteredTimesheetData = computed(() => {
+    if (!timesheetData.value || !Array.isArray(timesheetData.value)) {
+        return [];
+    }
+
     return timesheetData.value.filter((item) => {
-        // Date filtering
-        let isWithinDateRange = true;
-        if (props.fromDate && props.toDate && item.startDate) {
-            // Convert item.startDate to Date object
-            const itemDate = new Date(item.startDate);
-            const fromDateObj = new Date(props.fromDate);
-            const toDateObj = new Date(props.toDate);
-
-            // Reset time portion for accurate date comparison
-            fromDateObj.setHours(0, 0, 0, 0);
-            toDateObj.setHours(0, 0, 0, 0);
-            itemDate.setHours(0, 0, 0, 0);
-
-            isWithinDateRange = itemDate >= fromDateObj && itemDate <= toDateObj;
-        }
+        if (!item) return false;
 
         // Search filtering
         const searchTerm = activeSearch.value.toLowerCase();
         const matchesSearch = !searchTerm ||
             ['RegStatus', 'OTStatus', 'Meal', 'Transport'].some(key => {
                 const value = item[key];
-                return value?.toLowerCase().includes(searchTerm);
+                return value?.toLowerCase?.()?.includes(searchTerm);
             });
 
         // Other filters
         const matchesRegularization =
-            !filters.value.regularization || item.attendenceStatus?.toLowerCase() === filters.value.regularization.toLowerCase();
+            !filters.value.regularization || 
+            item.attendenceStatus?.toLowerCase() === filters.value.regularization.toLowerCase();
 
         const matchesOtStatus =
-            !filters.value.otStatus || item.otStatus?.toLowerCase() === filters.value.otStatus.toLowerCase();
+            !filters.value.otStatus || 
+            item.otStatus?.toLowerCase() === filters.value.otStatus.toLowerCase();
 
         const matchesMeal =
-            !filters.value.meal || item.meal?.toLowerCase() === filters.value.meal.toLowerCase();
+            !filters.value.meal || 
+            item.meal?.toLowerCase() === filters.value.meal.toLowerCase();
 
         const matchesTransport =
-            !filters.value.transport || item.transport?.toLowerCase() === filters.value.transport.toLowerCase();
+            !filters.value.transport || 
+            item.transport?.toLowerCase() === filters.value.transport.toLowerCase();
 
-        return isWithinDateRange && matchesSearch && matchesRegularization && matchesOtStatus && matchesMeal && matchesTransport;
+        return matchesSearch && matchesRegularization && matchesOtStatus && matchesMeal && matchesTransport;
     });
 });
 
@@ -134,8 +92,8 @@ const columns = ref([
     // { key: 'srNo', label: 'Sr.No', visible: true },
     { key: 'startDate', label: 'Shift Date', visible: true },
     { key: 'ShiftId', label: 'Shift', visible: true },
-    { key: 'inTime', label: 'in Time', visible: true },
-    { key: 'outTime', label: 'out Time', visible: true },
+    { key: 'inTime', label: 'In Time', visible: true },
+    { key: 'outTime', label: 'Out Time', visible: true },
     { key: 'RegStatus', label: 'Attendence Status', visible: true },
     { key: 'Tardiness', label: 'Tardiness', visible: true },
     { key: 'Undertime', label: 'Undertime', visible: true },
@@ -246,26 +204,31 @@ const currentPage = ref(1);
 const rowsPerPage = ref(10);
 const rowsPerPageOptions = [10, 20, 50, 100];
 const totalPages = computed(() => {
-    return Math.ceil(filteredTimesheetData.value.length / rowsPerPage.value);
+    return Math.ceil(filteredTimesheetData?.value.length / rowsPerPage.value);
 });
+
 const paginatedData = computed(() => {
     const start = (currentPage.value - 1) * rowsPerPage.value;
     const end = start + rowsPerPage.value;
     return sortedData.value.slice(start, end);
 });
+
 const changePage = (page) => {
     currentPage.value = page;
 };
+
 const changeRowsPerPage = (rows) => {
     rowsPerPage.value = rows;
     currentPage.value = 1;
 };
+
+
 // sorting by row
 const sortBy = ref('');
 const sortDesc = ref(false);
 
 const sortedData = computed(() => {
-    let data = [...filteredTimesheetData.value];
+    let data = [...filteredTimesheetData?.value];
 
     if (sortBy.value) {
         data.sort((a, b) => {
@@ -333,7 +296,7 @@ const handleShiftClick = (item) => {
     showShiftModal.value = true;
 };
 
-// ahift update function
+// shift update function 
 const Shift = async () => {
     updateShift(selectedItem.value.userId, newShiftId.value);
 };
@@ -342,14 +305,14 @@ const Shift = async () => {
 
 <template>
 
-    <div v-if="loading" class="flex items-center justify-center min-h-[400px]">
+    <!-- <div v-if="loading" class="flex items-center justify-center min-h-[400px]">
         <div class="flex flex-col items-center gap-4">
             <div class="animate-spin rounded-full h-12 w-12 border-4 border-orange-500 border-t-transparent"> </div>
             <span class="text-gray-600">Loading timesheet data... </span>
         </div>
-    </div>
+    </div> -->
 
-    <div v-if="!loading" :class="{ ' fixed inset-0 z-50 bg-white overflow-auto': isFullscreen }"
+    <div  :class="{ ' fixed inset-0 z-50 bg-white overflow-auto': isFullscreen }"
         class="shadow-md rounded-lg mx-auto">
         <div class="md:w-full p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
 
@@ -427,7 +390,7 @@ const Shift = async () => {
                     <select v-model="filters.otStatus" class="rounded-md border-gray-300 text-sm focus:ring-orange-500">
                         <option value="">All</option>
                         <option value="approved">Approved</option>
-                        <option value="applied">Applied</option>
+                        <option value="PENDING_APPROVAL">PENDING_APPROVAL</option>
 
                     </select>
                 </div>
@@ -467,16 +430,16 @@ const Shift = async () => {
                                 row[column.key] === 'Pending' ? 'bg-yellow-100 text-yellow-800' : '',
                                 row[column.key] === 'Rejected' ? 'bg-red-100 text-red-800' : ''
                             ]">
-                                {{ row[column.key] }}
+                                {{ row[column.key]||"-" }}
                             </span>
                         </template>
 
                         <template v-if="column.key === 'inTime' || column.key === 'outTime'">
-                            {{ formatISODuration(row[column.key]) }}
+                            {{ formatISODuration(row[column.key])||"-" }}
                         </template>
 
                         <template v-else>
-                            {{ row[column.key] }}
+                            {{ row[column.key] ||"-" }}
                         </template>
                     </span>
                 </div>
@@ -509,19 +472,19 @@ const Shift = async () => {
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
                     <tr v-for="item in paginatedData" :key="item.srNo"
-                        class="divide-x divide-gray-200 hover:bg-gray-50">
+                        class="divide-x text-center divide-gray-200 hover:bg-gray-50">
                         <td v-for="column in visibleColumns" :key="column.key"
                             class="px-3 py-3 text-xs whitespace-nowrap " :class="{
                                 'text-center': ['srNo', 'nd1', 'nd2', 'meal', 'transport'].includes(column.key)
                             }">
                             <template v-if="column.key === 'RegStatus'">
                                 <span :class="[
-                                    'px-2 py-1  text-xs font-medium inline-block',
+                                    'px-2 py-1  text-center  text-xs font-medium inline-block',
                                     item[column.key] === 'Approved' ? 'bg-green-100 text-green-800' : '',
-                                    item[column.key] === 'Pending' ? 'bg-yellow-100 text-yellow-800' : '',
+                                    item[column.key] === 'Pending ' ? 'bg-yellow-100 text-yellow-800' : '',
                                     item[column.key] === 'Rejected' ? 'bg-red-100 text-red-800' : ''
                                 ]">
-                                    {{ item[column.key] }}
+                                    {{ item[column.key]||"-" }}
                                 </span>
                             </template>
 
@@ -529,7 +492,7 @@ const Shift = async () => {
                             <template v-else-if="column.key === 'ShiftId'">
                                 <span @click="handleShiftClick(item)"
                                     class="cursor-pointer hover:text-orange-500 hover:underline">
-                                    {{ item[column.key] }}
+                                    {{ item[column.key] ||"-" }}
                                 </span>
                                 <div v-if="showShiftModal"
                                     class="fixed inset-0  bg-opacity-30 flex items-center justify-center z-50">
@@ -562,22 +525,22 @@ const Shift = async () => {
                             <template
                                 v-else-if="column.key === 'OTStatus' || column.key === 'Meal' || column.key === 'Transport'">
                                 <span :class="[
-                                    'px-2 py-1 rounded-full text-xs font-semibold inline-block',
+                                    'px-2 py-1 rounded-full text-xs text-center font-semibold inline-block',
                                     item[column.key] === 'Approved' ? ' text-green-800' : '',
-                                    item[column.key] === 'Applied' ? ' text-yellow-800' : ''
+                                    item[column.key] === 'PENDING_APPROVAL' ? ' text-yellow-800' : ''
                                 ]">
-                                    {{ item[column.key] }}
+                                    {{ item[column.key]||"-" }}
                                 </span>
                             </template>
 
                             <template v-else-if="column.key === 'inTime' || column.key === 'outTime'">
-                                {{ formatISODuration(item[column.key]) }}
+                                {{ formatISODuration(item[column.key]||"-") }}
                             </template>
 
 
 
-                            <template v-else>
-                                {{ item[column.key] }}
+                            <template class="" v-else>
+                                {{ item[column.key] ||"-" }}
                             </template>
                             <!-- <eidt or save -->
                             <template v-if="column.key === 'actions' && props.isEditable">

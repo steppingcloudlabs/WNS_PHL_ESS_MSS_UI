@@ -3,10 +3,13 @@
 import { Minus, Plus, RefreshCw, Search } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 import EmployeeTimesheetDetails from './EmployeeTimesheetDetails.vue';
-import { getTimesheetData } from '../api/timeSheet';
+import { getTimesheetData } from '../store/module/userModule';
 import { useUserStore } from '../store/userStore';
 
+
+const userStore = useUserStore();
 const toggleFilter = ref(false);
+
 const handleToggleFilter = () => {
     toggleFilter.value = !toggleFilter.value;
 };
@@ -15,22 +18,29 @@ const searchQueryEmployee = ref("");
 
 const sqe = ref("");
 
-// const searchEmployee = () =>{
-//     searchQueryEmployee.value = sqe.value;
-// }
+// console.log(searchQueryEmployee.value);
+// console.log(sqe.value);
 
-console.log(searchQueryEmployee.value);
-console.log(sqe.value);
+    const currentDate = new Date();
+    const sevenDaysAgo = new Date(currentDate);
+    sevenDaysAgo.setDate(currentDate.getDate() - 7);
 
+    const defaultEndDate = currentDate.toISOString().split('T')[0];
+    const defaultStartDate = sevenDaysAgo.toISOString().split('T')[0];
 
-const fd = ref("");
-const td = ref("");
+const fd = ref(defaultStartDate);
+const td = ref(defaultEndDate);
 const fromDate = ref('');
 const toDate = ref('');
 const reserDateFilter = () => {
+
+    fd.value=defaultStartDate;
+    td.value=defaultEndDate;
     fromDate.value = ""
     toDate.value = ""
+
 }
+
 const dateSearch = () => {
 
     fromDate.value = fd.value;
@@ -51,11 +61,8 @@ const dateSearch = () => {
 
     getTimesheetData(null, fromDate.value, toDate.value);
 };
-const userStore = useUserStore();
 
-console.log("reporties: ", userStore.reportees)
 
-// Add computed property for filtered reportees
 const filteredReportees = computed(() => {
     if (!sqe.value) return userStore.reportees;
     return userStore.reportees.filter(reportee =>
@@ -65,20 +72,16 @@ const filteredReportees = computed(() => {
 });
 
 const showDropdown = ref(false);
-
 const selectReportee = (reportee) => {
     sqe.value = reportee.defaultFullName;
-    console.log("Selected reportee:", reportee);
     showDropdown.value = false;
     // Pass the reportee's UserId to getTimesheetData
     // getTimesheetData(reportee.userId, fromDate.value, toDate.value);
 };
 
-// Also update the searchEmployee function to use the selected reportee's data
+// searchEmployee function to use the selected reportee's data
 const searchEmployee = () => {
     searchQueryEmployee.value = sqe.value;
-
-    console.log("sqe id : ", sqe.value);
     const selectedReportee = userStore.reportees.find(
         r => r.defaultFullName === sqe.value
     );
@@ -86,6 +89,7 @@ const searchEmployee = () => {
         getTimesheetData(selectedReportee?.userId, fromDate.value, toDate.value);
     }
 };
+
 
 </script>
 
@@ -95,7 +99,7 @@ const searchEmployee = () => {
 
         <!-- search -->
 
-        <div class="flex-1 min-w-0 my-4" v-if="useUserStore.isManager">
+        <div class="flex-1 min-w-0 my-4" v-if="useUserStore.getisManager">
             <label class="block mb-2  text-gray-700">Employee Name / ID *</label>
             <div class="flex flex-row items-center">
                 <div class="relative w-[300px]">
@@ -127,12 +131,11 @@ const searchEmployee = () => {
             </div>
 
         </div>
-    
-        
 
         <!-- date filter -->
 
         <div class="mt-6 flex flex-col gap-y-4 text-sm p-4 rounded-xl border border-gray-300 shadow-sm bg-white">
+            
             <div class="flex justify-between items-center">
                 <div class="font-medium">FILTER</div>
                 <button @click="handleToggleFilter" class="hover:bg-gray-100 p-1 rounded-full transition-colors"
@@ -166,11 +169,12 @@ const searchEmployee = () => {
                         </button>
                     </div>
                 </div>
+
             </div>
         </div>
 
         <div class="mt-6  w-[100%] ">
-            <EmployeeTimesheetDetails :fromDate="fromDate" :toDate="toDate" />
+            <EmployeeTimesheetDetails  />
 
         </div>
     </div>

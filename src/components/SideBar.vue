@@ -31,7 +31,7 @@ defineProps({
                     </span>
                 </div>
             </RouterLink>
-            <RouterLink to="/edit">
+            <!-- <RouterLink to="/edit">
                 <div
                     class="px-4 py-3 hover:bg-gray-700 transition-colors duration-200 flex justify-center items-center cursor-pointer">
                     <BookOpen class="w-5 h-5" :class="isOpen ? 'mr-2' : 'mx-auto'" />
@@ -48,10 +48,10 @@ defineProps({
                         Employee Timesheet Approve
                     </span>
                 </div>
-            </RouterLink>
+            </RouterLink> -->
         </nav>
 
-        <div class="mt-[400px] ml-4">
+        <div class="mt-[450px] ml-4">
             <div>Version: 0.1</div>
             <div>Last build : 24-04-2025</div>
         </div>

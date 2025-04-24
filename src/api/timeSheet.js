@@ -6,7 +6,7 @@ import { useUserStore } from '../store/userStore';
 
 export const getTimesheetData = async (USERId = null, startDate = null, endDate = null) => {
 
-    const userStore = useUserStore();
+    const userStore = useUserStore();   
     let userid = userStore.userId;
 
     console.log("user id fro timesheet dropdown: ", USERId);
@@ -28,7 +28,6 @@ export const getTimesheetData = async (USERId = null, startDate = null, endDate 
                 'Content-Type': 'application/json'
             }
         });
-        
         return {
             success: true,
             data: response.data,

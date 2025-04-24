@@ -3,7 +3,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import SideBar from './components/SideBar.vue'
 import Topbar from './components/Topbar.vue'
 import { RouterView } from 'vue-router'
-import { getUserRole } from './store/module/userModule'
+import { getTimesheetData, getUserRole } from './store/module/userModule'
 
 const isSidebarOpen = ref(false)
 const isMobile = ref(window.innerWidth < 768)
@@ -24,6 +24,13 @@ const handleResize = () => {
 const checkUserAccess = async () => {
   const result = await getUserRole()
   if (result.success) {
+    const currentDate = new Date();
+    const sevenDaysAgo = new Date(currentDate);
+    sevenDaysAgo.setDate(currentDate.getDate() - 7);
+
+    const defaultEndDate = currentDate.toISOString().split('T')[0];
+    const defaultStartDate = sevenDaysAgo.toISOString().split('T')[0];
+    getTimesheetData(null, defaultStartDate, defaultEndDate);
     authorized.value = true
   } else {
     authorized.value = false

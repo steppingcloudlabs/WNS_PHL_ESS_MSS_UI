@@ -1,9 +1,11 @@
 <script setup>
+import * as XLSX from 'xlsx';
 import { Download, Expand, ListTree, ToggleLeft, ChevronDown, Trash, ChevronUp, Check, Pencil, Search, Edit } from 'lucide-vue-next';
 import { ref, computed, onMounted, onUnmounted, watch, } from 'vue';
 import { getTimesheetData } from '../store/module/userModule';
 import { updateShift } from '../store/module/userModule';
 import { useUserStore } from '../store/userStore';
+
 
 
 const userStore = useUserStore();
@@ -15,11 +17,15 @@ const timesheetData = computed(() => userStore.timesheetData);
 console.log("user store data: ", timesheetData.value)
 // Load data when component mounts
 onMounted(async () => {
-  await userStore.fetchTimesheet();
-  console.log("Current timesheet data:", timesheetData.value);
+    const currentDate = new Date();
+    const sevenDaysAgo = new Date(currentDate);
+    sevenDaysAgo.setDate(currentDate.getDate() - 7);
+
+    const defaultEndDate = currentDate.toISOString().split('T')[0];
+    const defaultStartDate = sevenDaysAgo.toISOString().split('T')[0];
+    await userStore.fetchTimesheet(null, defaultStartDate, defaultEndDate);
+    console.log("Current timesheet data:", timesheetData.value);
 });
-
-
 
 
 
@@ -55,25 +61,23 @@ const filteredTimesheetData = computed(() => {
         return [];
     }
 
+    
     return timesheetData.value.filter((item) => {
         if (!item) return false;
 
-        // Search filtering
-        const searchTerm = activeSearch.value.toLowerCase();
-        const matchesSearch = !searchTerm ||
-            ['RegStatus', 'OTStatus', 'Meal', 'Transport'].some(key => {
-                const value = item[key];
-                return value?.toLowerCase?.()?.includes(searchTerm);
-            });
-
+       
         // Other filters
-        const matchesRegularization =
-            !filters.value.regularization || 
-            item.attendenceStatus?.toLowerCase() === filters.value.regularization.toLowerCase();
+        const effectiveRegStatus = getRegStatus(item)?.toLowerCase();
+        const matchesRegularization = !filters.value.regularization || 
+            (filters.value.regularization.toLowerCase() === effectiveRegStatus) || 
+            (filters.value.regularization.toLowerCase() === 'approved' && 
+             item.timeSheet?.some(ts => ts.timeType === 'WEXTSWIPE'));
 
-        const matchesOtStatus =
-            !filters.value.otStatus || 
-            item.otStatus?.toLowerCase() === filters.value.otStatus.toLowerCase();
+             const matchesOtStatus = !filters.value.otStatus || 
+    (item.OTStatus && item.OTStatus.toLowerCase() === filters.value.otStatus.toLowerCase()) || 
+    (item.timeValuation && item.timeValuation.some(tv => 
+        tv.approvalStatus?.toLowerCase() === filters.value.otStatus.toLowerCase()
+    ));
 
         const matchesMeal =
             !filters.value.meal || 
@@ -83,9 +87,29 @@ const filteredTimesheetData = computed(() => {
             !filters.value.transport || 
             item.transport?.toLowerCase() === filters.value.transport.toLowerCase();
 
-        return matchesSearch && matchesRegularization && matchesOtStatus && matchesMeal && matchesTransport;
+        return  matchesRegularization && matchesOtStatus && matchesMeal && matchesTransport;
     });
 });
+
+const getRegStatus = (item) => {
+    // If RegStatus is present, return it
+    if (item.RegStatus) {
+        return item.RegStatus;
+    }
+    
+    // Check timesheet array for WEXTSWIPE
+    if (item.timeSheet && Array.isArray(item.timeSheet)) {
+        const hasWextswipe = item.timeSheet.some(ts => 
+            ts.timeTypeGroup === 'WEXTSWIPE' || ts.timeType === 'WEXTSWIPE'
+        );
+        if (hasWextswipe) {
+            return 'Approved';
+        }
+    }
+    
+    // Default case
+    return '-';
+};
 
 // COLUMS CONTROLS
 const columns = ref([
@@ -301,6 +325,48 @@ const Shift = async () => {
     updateShift(selectedItem.value.userId, newShiftId.value);
 };
 
+const downloadExcel = () => {
+    // Get visible columns for headers
+    const headers = visibleColumns.value.map(col => col.label);
+    
+    // Transform data to match visible columns
+    const data = filteredTimesheetData.value.map(item => {
+        const row = {};
+        visibleColumns.value.forEach(col => {
+            let value = item[col.key];
+            
+            // Format specific columns
+            if (col.key === 'inTime' || col.key === 'outTime') {
+                value = formatISODuration(value);
+            }
+            if (col.key === 'RegStatus') {
+                value = getRegStatus(item);
+            }
+            row[col.label] = value || '-';
+        });
+        return row;
+    });
+    
+    // Create worksheet
+    const worksheet = XLSX.utils.json_to_sheet(data, { header: headers });
+    
+    // Create workbook
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Timesheet');
+    
+    // Generate Excel file
+    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    
+    // Save file
+    const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `Timesheet_${new Date().toISOString().split('T')[0]}.xlsx`;
+    link.click();
+    URL.revokeObjectURL(url);
+};
+
 </script>
 
 <template>
@@ -324,9 +390,9 @@ const Shift = async () => {
 
                 <!-- Action buttons -->
                 <div class="flex  gap-2 bg-neutral-200 border border-neutral-400 rounded-lg p-1">
-                    <button class="p-1 hover:bg-neutral-300 rounded" title="Delete">
+                    <!-- <button class="p-1 hover:bg-neutral-300 rounded" title="Delete">
                         <Trash class="w-5 h-5" />
-                    </button>
+                    </button> -->
 
                     <button @click="toggleView" class="p-1 hover:bg-neutral-300 rounded"
                         :title="isListView ? 'Table View' : 'List View'">
@@ -362,7 +428,7 @@ const Shift = async () => {
                         </div>
 
                     </div>
-                    <button class="p-1 hover:bg-neutral-300 rounded">
+                    <button @click="downloadExcel" class="p-1 hover:bg-neutral-300 rounded">
                         <Download class="w-5 h-5" />
                     </button>
 
@@ -479,13 +545,13 @@ const Shift = async () => {
                             }">
                             <template v-if="column.key === 'RegStatus'">
                                 <span :class="[
-                                    'px-2 py-1  text-center  text-xs font-medium inline-block',
-                                    item[column.key] === 'Approved' ? 'bg-green-100 text-green-800' : '',
-                                    item[column.key] === 'Pending ' ? 'bg-yellow-100 text-yellow-800' : '',
-                                    item[column.key] === 'Rejected' ? 'bg-red-100 text-red-800' : ''
-                                ]">
-                                    {{ item[column.key]||"-" }}
-                                </span>
+        'px-2 py-1 text-center text-xs font-medium inline-block',
+        getRegStatus(item) === 'Approved' ? 'bg-green-100 text-green-800' : '',
+        getRegStatus(item) === 'Pending' ? 'bg-yellow-100 text-yellow-800' : '',
+        getRegStatus(item) === 'Rejected' ? 'bg-red-100 text-red-800' : ''
+    ]">
+        {{ getRegStatus(item) }}
+    </span>
                             </template>
 
                             <!-- shift id and popup for update -->

@@ -24,13 +24,6 @@ const handleResize = () => {
 const checkUserAccess = async () => {
   const result = await getUserRole()
   if (result.success) {
-    const currentDate = new Date();
-    const sevenDaysAgo = new Date(currentDate);
-    sevenDaysAgo.setDate(currentDate.getDate() - 7);
-
-    const defaultEndDate = currentDate.toISOString().split('T')[0];
-    const defaultStartDate = sevenDaysAgo.toISOString().split('T')[0];
-    getTimesheetData(null, defaultStartDate, defaultEndDate);
     authorized.value = true
   } else {
     authorized.value = false

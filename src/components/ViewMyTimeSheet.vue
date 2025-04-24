@@ -32,7 +32,9 @@ const fd = ref(defaultStartDate);
 const td = ref(defaultEndDate);
 const fromDate = ref('');
 const toDate = ref('');
+
 const reserDateFilter = () => {
+    getTimesheetData(null, defaultStartDate, defaultEndDate);
 
     fd.value=defaultStartDate;
     td.value=defaultEndDate;
@@ -58,8 +60,8 @@ const dateSearch = () => {
     }
 
     console.log(fromDate.value, toDate.value)
-
     getTimesheetData(null, fromDate.value, toDate.value);
+
 };
 
 

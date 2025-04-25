@@ -59,7 +59,7 @@ export const getTimesheetData = async (USERId = null, startDate = null, endDate 
           method: 'GET',
           url: `${constant.endpoint}/rest/catalog-service-rest/employeeTimeSheet`,
           params: {
-              USERID: c2.isLocal?"395234":USERId?USERId:userid,
+              USERID: USERId?USERId:userid,
               STARTDATE: startDate,
               ENDDATE: endDate
           },

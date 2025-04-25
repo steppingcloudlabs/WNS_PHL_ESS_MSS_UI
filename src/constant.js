@@ -11,7 +11,7 @@ export default {
     isProd: false, // for prod space only, and while deploying to the prod
 
 
-    version: "0.1",
-    lastBuild: "11-04-2025"
+    version: "0.2",
+    lastBuild: "25-04-2025"
  
 };

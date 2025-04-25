@@ -89,10 +89,11 @@ const searchEmployee = () => {
         r => r.defaultFullName === sqe.value
     );
     if (selectedReportee) {
-        getTimesheetData(selectedReportee?.userId, fromDate.value, toDate.value);
+        userStore.fetchTimesheet(selectedReportee?.userId, fd.value, td.value);
     }
 };
 
+const manager = computed(() => userStore.getisManager);
 
 </script>
 
@@ -102,7 +103,7 @@ const searchEmployee = () => {
 
         <!-- search -->
 
-        <div class="flex-1 min-w-0 my-4" v-if="useUserStore.getisManager">
+        <div class="flex-1 min-w-0 my-4" v-if="manager">
             <label class="block mb-2  text-gray-700">Employee Name / ID *</label>
             <div class="flex flex-row items-center">
                 <div class="relative w-[300px]">

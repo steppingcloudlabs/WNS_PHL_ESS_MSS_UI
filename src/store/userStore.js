@@ -53,10 +53,13 @@ export const useUserStore = defineStore('user', {
 
 
       async fetchTimesheet(USERId = null, startDate = null, endDate = null) {
+         const userStore = useUserStore();   
+      let userid = userStore.userId;
+
         try {
           const response = await axios.get(`${constant.endpoint}/rest/catalog-service-rest/employeeTimeSheet`, {
             params: {
-              USERID: c2.isLocal ? "395234" : USERId || this.userId,
+              USERID: USERId?USERId:this.userId,
               STARTDATE: startDate,
               ENDDATE: endDate
             }

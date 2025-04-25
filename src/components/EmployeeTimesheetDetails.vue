@@ -65,8 +65,7 @@ const filteredTimesheetData = computed(() => {
     return timesheetData.value.filter((item) => {
         if (!item) return false;
 
-       
-        // Other filters
+
         const effectiveRegStatus = getRegStatus(item)?.toLowerCase();
         const matchesRegularization = !filters.value.regularization || 
             (filters.value.regularization.toLowerCase() === effectiveRegStatus) || 
@@ -74,18 +73,16 @@ const filteredTimesheetData = computed(() => {
              item.timeSheet?.some(ts => ts.timeType === 'WEXTSWIPE'));
 
              const matchesOtStatus = !filters.value.otStatus || 
-    (item.OTStatus && item.OTStatus.toLowerCase() === filters.value.otStatus.toLowerCase()) || 
-    (item.timeValuation && item.timeValuation.some(tv => 
+        (item.OTStatus && item.OTStatus.toLowerCase() === filters.value.otStatus.toLowerCase()) || 
+        (item.timeValuation && item.timeValuation.some(tv => 
         tv.approvalStatus?.toLowerCase() === filters.value.otStatus.toLowerCase()
-    ));
+        ));
 
-        const matchesMeal =
-            !filters.value.meal || 
-            item.meal?.toLowerCase() === filters.value.meal.toLowerCase();
+        const matchesMeal = !filters.value.meal || 
+    (item.Meal?.toLowerCase() === filters.value.meal.toLowerCase());
 
-        const matchesTransport =
-            !filters.value.transport || 
-            item.transport?.toLowerCase() === filters.value.transport.toLowerCase();
+const matchesTransport = !filters.value.transport || 
+    (item.Transport?.toLowerCase() === filters.value.transport.toLowerCase());
 
         return  matchesRegularization && matchesOtStatus && matchesMeal && matchesTransport;
     });
@@ -103,7 +100,7 @@ const getRegStatus = (item) => {
             ts.timeTypeGroup === 'WEXTSWIPE' || ts.timeType === 'WEXTSWIPE'
         );
         if (hasWextswipe) {
-            return 'Approved';
+            return 'APPROVED';
         }
     }
     
@@ -546,7 +543,7 @@ const downloadExcel = () => {
                             <template v-if="column.key === 'RegStatus'">
                                 <span :class="[
         'px-2 py-1 text-center text-xs font-medium inline-block',
-        getRegStatus(item) === 'Approved' ? 'bg-green-100 text-green-800' : '',
+        getRegStatus(item) === 'APPROVED' ? 'bg-green-100 text-green-800' : '',
         getRegStatus(item) === 'Pending' ? 'bg-yellow-100 text-yellow-800' : '',
         getRegStatus(item) === 'Rejected' ? 'bg-red-100 text-red-800' : ''
     ]">
@@ -592,10 +589,10 @@ const downloadExcel = () => {
                                 v-else-if="column.key === 'OTStatus' || column.key === 'Meal' || column.key === 'Transport'">
                                 <span :class="[
                                     'px-2 py-1 rounded-full text-xs text-center font-semibold inline-block',
-                                    item[column.key] === 'Approved' ? ' text-green-800' : '',
+                                    item[column.key] === 'Approved' ||'APPROVED' ? ' text-green-800' : '',
                                     item[column.key] === 'PENDING_APPROVAL' ? ' text-yellow-800' : ''
                                 ]">
-                                    {{ item[column.key]||"-" }}
+                                    {{ item[column.key] === 'PENDING_APPROVAL' ? 'PENDING APPROVAL' : item[column.key]||"-" }}
                                 </span>
                             </template>
 

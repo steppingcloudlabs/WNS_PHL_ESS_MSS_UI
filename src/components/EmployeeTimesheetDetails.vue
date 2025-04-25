@@ -111,6 +111,7 @@ const getRegStatus = (item) => {
 // COLUMS CONTROLS
 const columns = ref([
     // { key: 'srNo', label: 'Sr.No', visible: true },
+    { key: 'userId', label: 'Used ID', visible: true },
     { key: 'startDate', label: 'Shift Date', visible: true },
     { key: 'ShiftId', label: 'Shift', visible: true },
     { key: 'inTime', label: 'In Time', visible: true },

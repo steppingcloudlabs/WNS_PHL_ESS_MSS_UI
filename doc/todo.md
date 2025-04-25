@@ -1,6 +1,6 @@
 # UI
 1. Employee's filter - Multiselect
-   - Add a column for UserId in table
+   - Add a column for UserId in table 
 2. Time Attendace - Type - Add a column in Table
 3. On date filter, Put a capping of min 7 days, max 1 month
 3. Edit of Shift

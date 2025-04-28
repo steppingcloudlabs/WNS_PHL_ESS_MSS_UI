@@ -66,48 +66,46 @@ const handleSidebarToggle = () => {
   </div>
 
   <!-- Show full app if authorized -->
-  <div v-else class="flex min-h-screen bg-gray-50">
-    <!-- Overlay for mobile when sidebar is open -->
-    <div 
-      v-if="isMobile && isSidebarOpen"
-      class="fixed inset-0 bg-black bg-opacity-40 z-20 transition-opacity"
-      @click="isSidebarOpen = false"
+  <div v-else class="flex flex-col min-h-screen bg-gray-50">
+    <!-- Topbar - Moved outside the flex container -->
+    <Topbar 
+      @toggle-sidebar="handleSidebarToggle"
+      class="fixed top-0 left-0 right-0 z-50 border-b border-gray-200 "
     />
 
-    <!-- Sidebar -->
-    <SideBar 
-      :is-open="isSidebarOpen"
-      class="fixed top-0 left-0 h-screen z-30 transition-all duration-300 ease-in-out"
-      :class="{
-        'w-64': isSidebarOpen,
-        'w-16': !isSidebarOpen && !isMobile,
-        'w-0': !isSidebarOpen && isMobile,
-        '-translate-x-full': !isSidebarOpen && isMobile
-      }"
-    />
+    <div class="flex flex-1 pt-16"> 
 
-    <!-- Main content area -->
-    <div 
-      class="flex-1 min-w-0 transition-all duration-300" 
-      :class="{
-        'md:ml-64': isSidebarOpen && !isMobile,
-        'md:ml-16': !isSidebarOpen && !isMobile
-      }"
-    >
-      <!-- Topbar -->
-      <Topbar 
-        @toggle-sidebar="handleSidebarToggle"
-        class="sticky top-0 z-10 border-b border-gray-200"
+      <div 
+        v-if="isMobile && isSidebarOpen"
+        class="fixed inset-0  bg-opacity-40 z-20 transition-opacity"
+        @click="isSidebarOpen = false"
+      />
+
+      <!-- Sidebar -->
+      <SideBar 
+        :is-open="isSidebarOpen"
+        class="fixed top-16 left-0 h-[calc(100vh-4rem)] z-30 transition-all duration-300 ease-in-out"
         :class="{
-          '': isSidebarOpen && !isMobile,
-          'md:ml-16': !isSidebarOpen && !isMobile
+          'w-64': isSidebarOpen,
+          'w-16': !isSidebarOpen && !isMobile,
+          'w-0': !isSidebarOpen && isMobile,
+          '-translate-x-full': !isSidebarOpen && isMobile
         }"
       />
 
-      <!-- Page Content -->
-      <main class="p-4 w-full">
-        <RouterView />
-      </main>
+      <!-- Main content area -->
+      <div 
+        class="flex-1 min-w-0 transition-all duration-300" 
+        :class="{
+          'md:ml-64': isSidebarOpen && !isMobile,
+          'md:ml-16': !isSidebarOpen && !isMobile
+        }"
+      >
+        <!-- Page Content -->
+        <main class="p-4 w-full">
+          <RouterView />
+        </main>
+      </div>
     </div>
   </div>
 </template>

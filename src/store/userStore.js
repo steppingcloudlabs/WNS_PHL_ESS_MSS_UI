@@ -18,6 +18,7 @@ export const useUserStore = defineStore('user', {
     isManager: false,
     reportees: [],
     TimesheetData : []
+
   }),
 
   getters: {
@@ -49,6 +50,7 @@ export const useUserStore = defineStore('user', {
       this.managerEmail = data.manageremail
       this.isManager = data.isManager
       this.reportees = data.Reportees || []
+      
     },
 
 

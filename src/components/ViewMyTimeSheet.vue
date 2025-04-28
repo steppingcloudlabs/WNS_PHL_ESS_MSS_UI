@@ -15,11 +15,7 @@ const handleToggleFilter = () => {
 };
 
 const searchQueryEmployee = ref("");
-
 const sqe = ref("");
-
-// console.log(searchQueryEmployee.value);
-// console.log(sqe.value);
 
     const currentDate = new Date();
     const sevenDaysAgo = new Date(currentDate);
@@ -41,27 +37,58 @@ const reserDateFilter = () => {
     td.value=defaultEndDate;
     fromDate.value = ""
     toDate.value = ""
+    sqe.value=null
 
 }
 
 const dateSearch = () => {
+    searchQueryEmployee.value = sqe.value || null;
+    const selectedReportee = userStore.reportees.find(
+        r => r.defaultFullName === sqe.value
+    );
 
     fromDate.value = fd.value;
     toDate.value = td.value;
+
 
 
     if (!fromDate.value || !toDate.value) {
         alert('Please select both dates');
         return;
     }
+    
+
+
     if (fromDate.value > toDate.value) {
         alert('From date cannot be after To date');
         reserDateFilter();
         return;
     }
 
-    console.log(fromDate.value, toDate.value)
-    getTimesheetData(null, fromDate.value, toDate.value);
+      // Calculate date difference
+    const start = new Date(fromDate.value);
+    const end = new Date(toDate.value);
+    const diffTime = Math.abs(end - start);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; 
+
+    // Validate date range 
+    // uncomment in production
+    // if (diffDays < 7 || diffDays > 30) {
+    //     alert('Please select a date range between 7 and 30 days');
+    //     return;
+    // }
+
+    // if (fromDate.value > toDate.value) {
+    //     alert('From date cannot be after To date');
+    //     reserDateFilter();
+    //     return;
+    // }
+
+    
+        getTimesheetData(null, fromDate.value, toDate.value);
+    
+
+    
 
 };
 
@@ -73,7 +100,6 @@ const filteredReportees = computed(() => {
         reportee?.UserId?.toString().includes(sqe.value)
     );
 });
-
 const showDropdown = ref(false);
 const selectReportee = (reportee) => {
     sqe.value = reportee.defaultFullName;
@@ -88,6 +114,7 @@ const searchEmployee = () => {
     const selectedReportee = userStore.reportees.find(
         r => r.defaultFullName === sqe.value
     );
+
     if (selectedReportee) {
         userStore.fetchTimesheet(selectedReportee?.userId, fd.value, td.value);
     }
@@ -128,7 +155,7 @@ const manager = computed(() => userStore.getisManager);
                     <Search class="w-6 h-6" /> Search
                 </div>
                 <div
-                    @click=""
+                    @click="reserDateFilter"
                     class="hover:cursor-pointer ml-3 flex flex-row items-center text-xl bg-red-400 py-2 px-2 rounded-md">
                     <RefreshCw class="w-6 h-6" />
                 </div>

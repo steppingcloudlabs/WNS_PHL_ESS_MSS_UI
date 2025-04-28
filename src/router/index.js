@@ -27,4 +27,12 @@ const router = createRouter({
     ],
   })
 
+  router.beforeEach((to, from, next) => {
+    if (to.path === '/index.html') {
+      next('/')
+    } else {
+      next()
+    }
+  })
+
   export default router

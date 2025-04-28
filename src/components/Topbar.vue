@@ -2,6 +2,7 @@
 import { AlignJustify, Power, UserRound } from 'lucide-vue-next';
 import { ref } from 'vue';
 import { useUserStore } from '../store/userStore';
+import logo from "../assets/images/neo-logo.png"
 
 const isOpen = ref(true);
 const emit = defineEmits(['toggle-sidebar']);
@@ -14,17 +15,23 @@ const toggleSidebar = () => {
 
 const userStore = useUserStore();
 
-
 </script>
 
 <template>
-  <div class="md:w-full px-6 md:px-10 py-2  flex justify-between items-center bg-[#ff7c00] text-white">
-    <button 
+  <div class="w-screen px-6 md:px-10 py-2  flex justify-between items-center bg-[#ff7c00]  text-white">
+    <div class="flex flex-row">
+      <button 
       @click="toggleSidebar"
-      class="p-2 hover:cursor-pointer"
+      class="hover:cursor-pointer hover:bg-[#e66f00] px-2 rounded-md"
     >
-      <AlignJustify class="w-5 h-5"/>
+      <AlignJustify class="w-7 h-7"/>
     </button>
+    <!-- Logo -->
+    <div class="p-4 ">
+            <img :class="['h-5', !isOpen ? 'mx-auto' : '']" :src="logo" alt="Neo Logo">
+        </div>
+    </div>
+
 
     <div class=" hover:cursor-pointer flex justify-center items-center md:gap-x-2">
       <div>

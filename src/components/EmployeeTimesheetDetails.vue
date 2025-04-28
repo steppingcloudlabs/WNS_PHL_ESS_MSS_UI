@@ -14,7 +14,6 @@ const userStore = useUserStore();
 const timesheetData = computed(() => userStore.timesheetData);
 
 
-console.log("user store data: ", timesheetData.value)
 // Load data when component mounts
 onMounted(async () => {
     const currentDate = new Date();
@@ -61,30 +60,31 @@ const filteredTimesheetData = computed(() => {
         return [];
     }
 
-    
+
     return timesheetData.value.filter((item) => {
         if (!item) return false;
 
 
         const effectiveRegStatus = getRegStatus(item)?.toLowerCase();
-        const matchesRegularization = !filters.value.regularization || 
-            (filters.value.regularization.toLowerCase() === effectiveRegStatus) || 
-            (filters.value.regularization.toLowerCase() === 'approved' && 
-             item.timeSheet?.some(ts => ts.timeType === 'WEXTSWIPE'));
+        const matchesRegularization = !filters.value.regularization ||
+            (filters.value.regularization.toLowerCase() === effectiveRegStatus) ||
+            (filters.value.regularization.toLowerCase() === 'approved' &&
+                item.timeSheet?.some(ts => ts.timeType === 'WEXTSWIPE'));
 
-             const matchesOtStatus = !filters.value.otStatus || 
-        (item.OTStatus && item.OTStatus.toLowerCase() === filters.value.otStatus.toLowerCase()) || 
-        (item.timeValuation && item.timeValuation.some(tv => 
-        tv.approvalStatus?.toLowerCase() === filters.value.otStatus.toLowerCase()
-        ));
+        const matchesOtStatus = !filters.value.otStatus ||
+            (item.OTStatus && item.OTStatus.toLowerCase() === filters.value.otStatus.toLowerCase()) ||
+            (item.timeValuation && item.timeValuation.some(tv =>
+                tv.approvalStatus?.toLowerCase() === filters.value.otStatus.toLowerCase()
+            ));
 
-        const matchesMeal = !filters.value.meal || 
-    (item.Meal?.toLowerCase() === filters.value.meal.toLowerCase());
+        const matchesMeal = !filters.value.meal ||
+            (item.Meal?.toLowerCase() === filters.value.meal.toLowerCase());
 
-const matchesTransport = !filters.value.transport || 
-    (item.Transport?.toLowerCase() === filters.value.transport.toLowerCase());
+        const matchesTransport = !filters.value.transport ||
+            (item.Transport?.toLowerCase() === filters.value.transport.toLowerCase());
 
-        return  matchesRegularization && matchesOtStatus && matchesMeal && matchesTransport;
+        return matchesRegularization && matchesOtStatus && matchesMeal && matchesTransport;
+
     });
 });
 
@@ -93,19 +93,32 @@ const getRegStatus = (item) => {
     if (item.RegStatus) {
         return item.RegStatus;
     }
-    
+
     // Check timesheet array for WEXTSWIPE
     if (item.timeSheet && Array.isArray(item.timeSheet)) {
-        const hasWextswipe = item.timeSheet.some(ts => 
+        const hasWextswipe = item.timeSheet.some(ts =>
             ts.timeTypeGroup === 'WEXTSWIPE' || ts.timeType === 'WEXTSWIPE'
         );
         if (hasWextswipe) {
             return 'APPROVED';
         }
     }
-    
+
     // Default case
     return '-';
+};
+
+const getAttendanceType = (item) => {
+    if (item.timeSheet && Array.isArray(item.timeSheet)) {
+        const timeType = item.timeSheet.find(ts =>
+            ts.timeTypeGroup === 'WEXTSWIPE' ||
+            ts.timeType === 'WEXTSWIPE'
+        );
+        if (timeType) {
+            return timeType.timeType || timeType.timeTypeGroup;
+        }
+    }
+    return 'REGULAR';
 };
 
 // COLUMS CONTROLS
@@ -117,9 +130,10 @@ const columns = ref([
     { key: 'inTime', label: 'In Time', visible: true },
     { key: 'outTime', label: 'Out Time', visible: true },
     { key: 'RegStatus', label: 'Attendence Status', visible: true },
+    { key: 'attendanceType', label: 'Attendance Type', visible: true },
     { key: 'Tardiness', label: 'Tardiness', visible: true },
     { key: 'Undertime', label: 'Undertime', visible: true },
-    { key: 'OTHours', label: 'OT Hours', visible: true },
+    { key: 'OTHourAndMin', label: 'OT Hours', visible: true },
     { key: 'OTStatus', label: 'OT Status', visible: true },
     { key: 'ND1', label: 'ND1', visible: true },
     { key: 'ND2', label: 'ND2', visible: true },
@@ -135,7 +149,6 @@ const formatISODuration = (duration) => {
 
     // Handle PT0S case
     if (duration === 'PT0S') return '00:00';
-
     const matches = duration.match(/PT(\d+H)?(\d+M)?(\d+S)?/);
     if (!matches) return duration;
 
@@ -143,6 +156,7 @@ const formatISODuration = (duration) => {
     const minutes = matches[2] ? parseInt(matches[2]) : 0;
 
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+
 };
 
 // Add actions column if editable
@@ -312,28 +326,37 @@ const selectedItem = ref(null);
 const newShiftId = ref('');
 
 
+// cannot be updated da
 const handleShiftClick = (item) => {
+    const shiftDate = new Date(item.startDate);
+    const today = new Date();
+    const diffTime = Math.abs(today - shiftDate);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays > 60) {
+        alert('Cannot update shift data older than 60 days');
+        return;
+    }
+    
     selectedItem.value = item;
     newShiftId.value = item.ShiftId;
     showShiftModal.value = true;
+
 };
 
 // shift update function 
 const Shift = async () => {
+    
     updateShift(selectedItem.value.userId, newShiftId.value);
 };
 
 const downloadExcel = () => {
-    // Get visible columns for headers
     const headers = visibleColumns.value.map(col => col.label);
-    
-    // Transform data to match visible columns
     const data = filteredTimesheetData.value.map(item => {
         const row = {};
         visibleColumns.value.forEach(col => {
             let value = item[col.key];
-            
-            // Format specific columns
+
             if (col.key === 'inTime' || col.key === 'outTime') {
                 value = formatISODuration(value);
             }
@@ -344,17 +367,17 @@ const downloadExcel = () => {
         });
         return row;
     });
-    
+
     // Create worksheet
     const worksheet = XLSX.utils.json_to_sheet(data, { header: headers });
-    
+
     // Create workbook
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Timesheet');
-    
+
     // Generate Excel file
     const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-    
+
     // Save file
     const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
     const url = URL.createObjectURL(blob);
@@ -376,8 +399,7 @@ const downloadExcel = () => {
         </div>
     </div> -->
 
-    <div  :class="{ ' fixed inset-0 z-50 bg-white overflow-auto': isFullscreen }"
-        class="shadow-md rounded-lg mx-auto">
+    <div :class="{ ' fixed inset-0 z-50 bg-white overflow-auto': isFullscreen }" class="shadow-md rounded-lg mx-auto">
         <div class="md:w-full p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
 
             <div class="text-lg font-semibold">
@@ -480,6 +502,29 @@ const downloadExcel = () => {
             </div>
         </div>
 
+        <!-- legends -->
+        <div>
+            <div class="px-4 py-2 border-b">
+                <div class="flex flex-wrap gap-4 items-center text-sm">
+                    <span class="font-medium text-lg">Status:</span>
+                    <div class="flex items-center gap-6">
+                        <div class="flex items-center gap-2">
+                            <div class="w-4 h-4 rounded-full bg-green-500"></div>
+                            <span>Approved</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-4 h-4 rounded-full bg-orange-500"></div>
+                            <span>Pending</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-4 h-4 rounded-full bg-red-500"></div>
+                            <span>Declined</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- List View -->
         <div v-if="isListView" class="space-y-2 p-4">
             <div v-for="row in filteredTimesheetData" :key="row.srNo"
@@ -494,16 +539,24 @@ const downloadExcel = () => {
                                 row[column.key] === 'Pending' ? 'bg-yellow-100 text-yellow-800' : '',
                                 row[column.key] === 'Rejected' ? 'bg-red-100 text-red-800' : ''
                             ]">
-                                {{ row[column.key]||"-" }}
+                                {{ row[column.key] || "-" }}
                             </span>
                         </template>
 
-                        <template v-if="column.key === 'inTime' || column.key === 'outTime'">
-                            {{ formatISODuration(row[column.key])||"-" }}
+                        <template v-else-if="column.key === 'attendanceType'">
+                            <span class="px-2 py-1 text-xs font-medium inline-block">
+                                {{ getAttendanceType(row) }}
+                            </span>
                         </template>
 
+
+                        <template v-if="column.key === 'inTime' || column.key === 'outTime'">
+                            {{ formatISODuration(row[column.key]) || "-" }}
+                        </template>
+
+
                         <template v-else>
-                            {{ row[column.key] ||"-" }}
+                            {{ row[column.key] || "-" }}
                         </template>
                     </span>
                 </div>
@@ -543,20 +596,26 @@ const downloadExcel = () => {
                             }">
                             <template v-if="column.key === 'RegStatus'">
                                 <span :class="[
-        'px-2 py-1 text-center text-xs font-medium inline-block',
-        getRegStatus(item) === 'APPROVED' ? 'bg-green-100 text-green-800' : '',
-        getRegStatus(item) === 'Pending' ? 'bg-yellow-100 text-yellow-800' : '',
-        getRegStatus(item) === 'Rejected' ? 'bg-red-100 text-red-800' : ''
-    ]">
-        {{ getRegStatus(item) }}
-    </span>
+                                    'px-2 py-1 text-center text-xs font-medium inline-block',
+                                    getRegStatus(item) === 'APPROVED' ? 'bg-green-100 text-green-800' : '',
+                                    getRegStatus(item) === 'Pending' ? 'bg-yellow-100 text-yellow-800' : '',
+                                    getRegStatus(item) === 'Rejected' ? 'bg-red-100 text-red-800' : ''
+                                ]">
+                                    {{ getRegStatus(item) }}
+                                </span>
                             </template>
+
+                            <template v-else-if="column.key === 'attendanceType'">
+    <span class="px-2 py-1 text-xs font-medium inline-block">
+        {{ getAttendanceType(item) }}
+    </span>
+</template>
 
                             <!-- shift id and popup for update -->
                             <template v-else-if="column.key === 'ShiftId'">
                                 <span @click="handleShiftClick(item)"
                                     class="cursor-pointer hover:text-orange-500 hover:underline">
-                                    {{ item[column.key] ||"-" }}
+                                    {{ item[column.key] || "-" }}
                                 </span>
                                 <div v-if="showShiftModal"
                                     class="fixed inset-0  bg-opacity-30 flex items-center justify-center z-50">
@@ -590,21 +649,22 @@ const downloadExcel = () => {
                                 v-else-if="column.key === 'OTStatus' || column.key === 'Meal' || column.key === 'Transport'">
                                 <span :class="[
                                     'px-2 py-1 rounded-full text-xs text-center font-semibold inline-block',
-                                    item[column.key] === 'Approved' ||'APPROVED' ? ' text-green-800' : '',
+                                    item[column.key] === 'Approved' || 'APPROVED' ? ' text-green-800' : '',
                                     item[column.key] === 'PENDING_APPROVAL' ? ' text-yellow-800' : ''
                                 ]">
-                                    {{ item[column.key] === 'PENDING_APPROVAL' ? 'PENDING APPROVAL' : item[column.key]||"-" }}
+                                    {{ item[column.key] === 'PENDING_APPROVAL' ? 'PENDING APPROVAL' :
+                                        item[column.key] || "-" }}
                                 </span>
                             </template>
 
                             <template v-else-if="column.key === 'inTime' || column.key === 'outTime'">
-                                {{ formatISODuration(item[column.key]||"-") }}
+                                {{ formatISODuration(item[column.key] || "-") }}
                             </template>
 
 
 
                             <template class="" v-else>
-                                {{ item[column.key] ||"-" }}
+                                {{ item[column.key] || "-" }}
                             </template>
                             <!-- <eidt or save -->
                             <template v-if="column.key === 'actions' && props.isEditable">

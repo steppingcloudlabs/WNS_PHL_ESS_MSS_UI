@@ -18,7 +18,7 @@ const userStore = useUserStore();
 </script>
 
 <template>
-  <div class="w-screen px-6 md:px-10 py-2  flex justify-between items-center bg-[#ff7c00]  text-white">
+  <div class="w-screen px-6 md:pr-10 py-2  flex justify-between items-center bg-[#ff7c00]  text-white">
     <div class="flex flex-row">
       <button 
       @click="toggleSidebar"

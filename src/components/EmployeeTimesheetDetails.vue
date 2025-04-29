@@ -77,11 +77,11 @@ const filteredTimesheetData = computed(() => {
                 tv.approvalStatus?.toLowerCase() === filters.value.otStatus.toLowerCase()
             ));
 
-        const matchesMeal = !filters.value.meal ||
-            (item.Meal?.toLowerCase() === filters.value.meal.toLowerCase());
+            const matchesMeal = !filters.value.meal ||
+            (item.Meal && item.Meal.toLowerCase() === filters.value.meal.toLowerCase());
 
         const matchesTransport = !filters.value.transport ||
-            (item.Transport?.toLowerCase() === filters.value.transport.toLowerCase());
+            (item.Transport && item.Transport.toLowerCase() === filters.value.transport.toLowerCase());
 
         return matchesRegularization && matchesOtStatus && matchesMeal && matchesTransport;
 
@@ -89,42 +89,17 @@ const filteredTimesheetData = computed(() => {
 });
 
 const getRegStatus = (item) => {
-    // If RegStatus is present, return it
-    if (item.RegStatus) {
-        return item.RegStatus;
+    if (item.attendanceType === 'WEXTSWIPE') {
+        return 'APPROVED';
     }
-
-    // Check timesheet array for WEXTSWIPE
-    if (item.timeSheet && Array.isArray(item.timeSheet)) {
-        const hasWextswipe = item.timeSheet.some(ts =>
-            ts.timeTypeGroup === 'WEXTSWIPE' || ts.timeType === 'WEXTSWIPE'
-        );
-        if (hasWextswipe) {
-            return 'APPROVED';
-        }
-    }
-
-    // Default case
-    return '-';
+    return item.RegStatus;
 };
 
-const getAttendanceType = (item) => {
-    if (item.timeSheet && Array.isArray(item.timeSheet)) {
-        const timeType = item.timeSheet.find(ts =>
-            ts.timeTypeGroup === 'WEXTSWIPE' ||
-            ts.timeType === 'WEXTSWIPE'
-        );
-        if (timeType) {
-            return timeType.timeType || timeType.timeTypeGroup;
-        }
-    }
-    return 'REGULAR';
-};
 
 // COLUMS CONTROLS
 const columns = ref([
     // { key: 'srNo', label: 'Sr.No', visible: true },
-    { key: 'userId', label: 'Used ID', visible: true },
+    { key: 'userId', label: 'User ID', visible: true },
     { key: 'startDate', label: 'Shift Date', visible: true },
     { key: 'ShiftId', label: 'Shift', visible: true },
     { key: 'inTime', label: 'In Time', visible: true },
@@ -134,9 +109,11 @@ const columns = ref([
     { key: 'Tardiness', label: 'Tardiness', visible: true },
     { key: 'Undertime', label: 'Undertime', visible: true },
     { key: 'OTHourAndMin', label: 'OT Hours', visible: true },
-    { key: 'OTStatus', label: 'OT Status', visible: true },
-    { key: 'ND1', label: 'ND1', visible: true },
-    { key: 'ND2', label: 'ND2', visible: true },
+    { key: 'OTStatus', label: 'OT Status', visible: false},
+    { key: 'ND11', label: 'ND11', visible: true },
+    { key: 'ND12', label: 'ND12', visible: true },
+    { key: 'ND21', label: 'ND21', visible: true },
+    { key: 'ND22', label: 'ND22', visible: true },
     { key: 'Meal', label: 'Meal', visible: true },
     { key: 'Transport', label: 'Transport', visible: true }
 
@@ -332,12 +309,12 @@ const handleShiftClick = (item) => {
     const today = new Date();
     const diffTime = Math.abs(today - shiftDate);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays > 60) {
         alert('Cannot update shift data older than 60 days');
         return;
     }
-    
+
     selectedItem.value = item;
     newShiftId.value = item.ShiftId;
     showShiftModal.value = true;
@@ -346,7 +323,6 @@ const handleShiftClick = (item) => {
 
 // shift update function 
 const Shift = async () => {
-    
     updateShift(selectedItem.value.userId, newShiftId.value);
 };
 
@@ -532,22 +508,37 @@ const downloadExcel = () => {
                 <div v-for="column in visibleColumns" :key="column.key" class="grid grid-cols-2 gap-2 py-1">
                     <span class="font-semibold text-sm">{{ column.label }}:</span>
                     <span class="text-sm text-gray-800">
+                        
                         <template v-if="column.key === 'RegStatus' || column.key === 'OTStatus'">
                             <span :class="[
                                 'px-2 py-1 rounded-full text-xs font-medium inline-block',
-                                row[column.key] === 'Approved' ? 'bg-green-100 text-green-800' : '',
-                                row[column.key] === 'Pending' ? 'bg-yellow-100 text-yellow-800' : '',
-                                row[column.key] === 'Rejected' ? 'bg-red-100 text-red-800' : ''
+                                row[column.key] === 'APPROVED' ? 'bg-green-100 text-green-800' : '',
+                                row[column.key] === 'PENDING' ? 'bg-yellow-100 text-yellow-800' : '',
+                                row[column.key] === 'REJECTED' ? 'bg-red-100 text-red-800' : ''
                             ]">
-                                {{ row[column.key] || "-" }}
+                                {{  getRegStatus(row) }}
                             </span>
                         </template>
 
                         <template v-else-if="column.key === 'attendanceType'">
                             <span class="px-2 py-1 text-xs font-medium inline-block">
-                                {{ getAttendanceType(row) }}
+                                {{ row[column.key] || "-"  }}
                             </span>
                         </template>
+
+                        <!-- Meal and Transport  -->
+                        <template v-else-if="column.key === 'Meal' || column.key === 'Transport'">
+                            <span :class="[
+                                'px-2 py-1 rounded text-xs font-medium inline-block',
+                                row[column.key] === 'approved' ? 'bg-green-100 text-green-800' : '',
+                                row[column.key] === 'applied' ? 'bg-orange-100 text-orange-800' : '',
+                                row[column.key] === 'rejected' ? 'bg-red-100 text-red-800' : '',
+                            ]">
+                                {{ row[`${column.key}Hours`] || "-" }}
+                                {{ row[column.key] ? `(${row[column.key]})` : '' }}
+                            </span>
+                        </template>
+
 
 
                         <template v-if="column.key === 'inTime' || column.key === 'outTime'">
@@ -606,10 +597,10 @@ const downloadExcel = () => {
                             </template>
 
                             <template v-else-if="column.key === 'attendanceType'">
-    <span class="px-2 py-1 text-xs font-medium inline-block">
-        {{ getAttendanceType(item) }}
-    </span>
-</template>
+                                <span class="px-2 py-1 text-xs font-medium inline-block">
+                                    {{ item[column.key] || "-" }}
+                                </span>
+                            </template>
 
                             <!-- shift id and popup for update -->
                             <template v-else-if="column.key === 'ShiftId'">
@@ -644,20 +635,38 @@ const downloadExcel = () => {
                                     </div>
                                 </div>
                             </template>
+<!-- OT status  and Hours-->
+<template v-else-if="column.key === 'OTHourAndMin'">
+    <span :class="[
+        'px-2 py-1 rounded text-xs font-medium inline-block',
+        item.OTStatus === 'APPROVED' || item.OTStatus === 'Approved' ? 'bg-green-100 text-green-800' : '',
+        item.OTStatus === 'PENDING_APPROVAL' ? 'bg-orange-100 text-orange-800' : '',
+        item.OTStatus === 'REJECTED' || item.OTStatus === 'Rejected' ? 'bg-red-100 text-red-800' : ''
+    ]">
+        {{ item[column.key] || "-" }}
+    </span>
+</template>
 
-                            <template
-                                v-else-if="column.key === 'OTStatus' || column.key === 'Meal' || column.key === 'Transport'">
-                                <span :class="[
-                                    'px-2 py-1 rounded-full text-xs text-center font-semibold inline-block',
-                                    item[column.key] === 'Approved' || 'APPROVED' ? ' text-green-800' : '',
-                                    item[column.key] === 'PENDING_APPROVAL' ? ' text-yellow-800' : ''
-                                ]">
-                                    {{ item[column.key] === 'PENDING_APPROVAL' ? 'PENDING APPROVAL' :
-                                        item[column.key] || "-" }}
-                                </span>
-                            </template>
 
-                            <template v-else-if="column.key === 'inTime' || column.key === 'outTime'">
+<template v-else-if="column.key === 'Meal' || column.key === 'Transport'">
+    <span :class="[
+        'px-2 py-1 rounded text-xs font-medium inline-block',
+        // Status-based background colors
+        item[column.key] === 'approved' ? 'bg-green-100 text-green-800' : '',
+        item[column.key] === 'applied' || item[column.key] === 'pending' ? 'bg-orange-100 text-orange-800' : '',
+        item[column.key] === 'rejected' ? 'bg-red-100 text-red-800' : '',
+    ]">
+        <template v-if="item[column.key] === 'approved'">
+            {{ item[`${column.key}Hours`] || "-" }}
+        </template>
+        <template v-else>
+            {{ item[`${column.key}Hours`] ? `${item[`${column.key}Hours`]} (${item[column.key]})` : "-" }}
+        </template>
+    </span>
+</template>
+
+                            
+<template v-else-if="column.key === 'inTime' || column.key === 'outTime'">
                                 {{ formatISODuration(item[column.key] || "-") }}
                             </template>
 

@@ -14,7 +14,7 @@ PHL ESS Observations:
 9. WNS to come back if we can show OT Hours similar to Meal and Transport.
 10. Tardiness and Undertime should also have a breakup. Faizan to configure the same on Timesheet.
 11. ✅ OT Hours to be shown in Hours and Minutes.
-12. Leave and Leave status to be added as a column.
+12. ✅Leave and Leave status to be added as a column.
 13. WNS to share column header for Tardiness and Undertime.
 14. Column to be added for Holiday.
 15. Check if we can store the Column Preference for the users. (Not on Priority)

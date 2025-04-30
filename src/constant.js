@@ -10,7 +10,6 @@ export default {
     isTest: false, // for test space only, this should be true while deploying to test space
     isProd: false, // for prod space only, and while deploying to the prod
 
-
     version: "0.2",
     lastBuild: "25-04-2025"
  

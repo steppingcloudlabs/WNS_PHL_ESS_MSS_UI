@@ -64,10 +64,12 @@ export const useUserStore = defineStore('user', {
         if (!USERIds || USERIds.length === 0) {
           USERIds = [defaultUserId];
         }
+
+        const uids = USERIds[0]
     
         const response = await axios.get(`${constant.endpoint}/rest/catalog-service-rest/employeeTimeSheet`, {
           params: {
-            USERID: USERIds.join(','),
+            USERID: uids[0],
             STARTDATE: startDate,
             ENDDATE: endDate
           }

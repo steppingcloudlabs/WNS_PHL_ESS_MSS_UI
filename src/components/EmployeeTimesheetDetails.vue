@@ -530,14 +530,14 @@ const downloadExcel = () => {
                             </span>
                         </template>
 
-<template v-else-if="column.key === 'leave'">
+                        <template v-else-if="column.key === 'leave'">
     <span :class="[
         'px-2 py-1 rounded text-xs font-medium inline-block',
-        item.leaveStatus === 'APPROVED' || item.leaveStatus === 'Approved' ? 'bg-green-100 text-green-800' : '',
-        item.leaveStatus === 'PENDING' || item.leaveStatus === 'Pending' ? 'bg-orange-100 text-orange-800' : '',
-        item.leaveStatus === 'REJECTED' || item.leaveStatus === 'Rejected' ? 'bg-red-100 text-red-800' : ''
+        row.leaveStatus === 'APPROVED' || row.leaveStatus === 'Approved' ? 'bg-green-100 text-green-800' : '',
+        row.leaveStatus === 'PENDING' || row.leaveStatus === 'Pending' ? 'bg-orange-100 text-orange-800' : '',
+        row.leaveStatus === 'REJECTED' || row.leaveStatus === 'Rejected' ? 'bg-red-100 text-red-800' : ''
     ]">
-        {{ item[column.key] || "-" }}
+        {{ row[column.key] || "-" }}
     </span>
 </template>
                         
@@ -669,12 +669,13 @@ const downloadExcel = () => {
     </span>
 </template>
 
+<!-- leave || status -->
 <template v-else-if="column.key === 'leave'">
     <span :class="[
         'px-2 py-1 rounded text-xs font-medium inline-block',
-        item.leaveStatus === 'APPROVED' || item.leaveStatus === 'Approved' ? 'bg-green-100 text-green-800' : '',
-        item.leaveStatus === 'PENDING' || item.leaveStatus === 'Pending' ? 'bg-orange-100 text-orange-800' : '',
-        item.leaveStatus === 'REJECTED' || item.leaveStatus === 'Rejected' ? 'bg-red-100 text-red-800' : ''
+        item?.leaveStatus === 'APPROVED' || item?.leaveStatus === 'Approved' ? 'bg-green-100 text-green-800' : '',
+        item?.leaveStatus === 'PENDING' || item?.leaveStatus === 'Pending' ? 'bg-orange-100 text-orange-800' : '',
+        item?.leaveStatus === 'REJECTED' || item?.leaveStatus === 'Rejected' ? 'bg-red-100 text-red-800' : ''
     ]">
         {{ item[column.key] || "-" }}
     </span>

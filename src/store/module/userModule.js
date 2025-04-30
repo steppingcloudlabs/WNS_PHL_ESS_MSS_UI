@@ -95,16 +95,21 @@ export const getTimesheetData = async (USERId = null, startDate = null, endDate 
   }
 };
 
-export const updateShift = async (id, shiftid) => {
-  console.log("updating shift:", id, shiftid);
+export const updateShift = async (loggedInUserId, startDate, workSchedule, tempTimeExternalCode) => {
+  console.log("updating shift:", loggedInUserId, userid, workSchedule);
 
   try {
     const response = await axios({
       method: 'PUT',
-      url: `${constant.endpoint}/rest/catalog-service-rest/updateShift`,
-      data: {
-        ID: id,
-        ShiftId: shiftid
+      url: `${constant.endpoint}/rest/catalog-service-rest/updateTemporaryTime`,
+
+      payload: {
+
+        //  tempTimeExternalCode will get it soon
+        tempTimeExternalCode: "",
+        workSchedule:"",
+        startDate:"",
+        CREATEDBY:loggedInUserId,
       },
       headers: {
         'Content-Type': 'application/json'
@@ -133,4 +138,5 @@ export const updateShift = async (id, shiftid) => {
       message: error.response?.data?.message || 'Failed to update shift'
     };
   }
+
 };

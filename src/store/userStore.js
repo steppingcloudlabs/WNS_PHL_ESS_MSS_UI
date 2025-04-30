@@ -53,29 +53,38 @@ export const useUserStore = defineStore('user', {
       
     },
 
-
-      async fetchTimesheet(USERId = null, startDate = null, endDate = null) {
-         const userStore = useUserStore();   
-      let userid = userStore.userId;
-
-        try {
-          const response = await axios.get(`${constant.endpoint}/rest/catalog-service-rest/employeeTimeSheet`, {
-            params: {
-              USERID: USERId?USERId:this.userId,
-              STARTDATE: startDate,
-              ENDDATE: endDate
-            }
-          });
-          
-          if (response.status === 200) {
-            this.setTimeSheet(response.data);
-            return true;
-          }
-        } catch (error) {
-          console.error("Failed to fetch timesheet:", error);
-          return false;
+    async fetchTimesheet(USERIds = null, startDate = null, endDate = null) {
+      console.log("user id array: ", USERIds);
+    
+      try {
+        const userStore = useUserStore();   
+        let defaultUserId = userStore.userId;
+    
+        // Fallback to current user if no USERIds passed
+        if (!USERIds || USERIds.length === 0) {
+          USERIds = [defaultUserId];
         }
-      },
+    
+        const response = await axios.get(`${constant.endpoint}/rest/catalog-service-rest/employeeTimeSheet`, {
+          params: {
+            USERID: USERIds.join(','),
+            STARTDATE: startDate,
+            ENDDATE: endDate
+          }
+        });
+    
+        if (response.status === 200) {
+          this.setTimeSheet(response.data);
+          return true;
+        }
+      } catch (error) {
+        console.error("Failed to fetch timesheet:", error);
+        return false;
+      }
+    }
+    
+    ,
+    
       
       setTimeSheet(data) {
         // Handle both direct array and { result: array } responses

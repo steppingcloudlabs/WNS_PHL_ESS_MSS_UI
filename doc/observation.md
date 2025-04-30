@@ -9,7 +9,7 @@ PHL ESS Observations:
     Orange for Pending
 6. ✅Legends to be show on top of table.
 7. ✅Meal and Transport Allowance to have the actual value and should be highlighted according to their Status with Legend color in the background.
-8. ND1 and ND2 to be further divided and breakup should be visible whenever user  click on the Hours.
+8. ✅ ND1 and ND2 to be further divided and breakup should be visible whenever user  click on the Hours.
 8. WNS to come back on ND1 and ND2 Breakup.
 9. WNS to come back if we can show OT Hours similar to Meal and Transport.
 10. Tardiness and Undertime should also have a breakup. Faizan to configure the same on Timesheet.

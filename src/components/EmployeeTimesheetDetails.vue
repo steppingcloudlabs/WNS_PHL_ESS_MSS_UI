@@ -13,6 +13,9 @@ const userStore = useUserStore();
 // Access data through computed property
 const timesheetData = computed(() => userStore.timesheetData);
 
+const LoggedInUserId = computed(()=>userStore.userInfo);
+console.log("loggedin USer: ", LoggedInUserId.value.userId);
+
 
 // Load data when component mounts
 onMounted(async () => {
@@ -106,6 +109,8 @@ const columns = ref([
     { key: 'outTime', label: 'Out Time', visible: true },
     { key: 'RegStatus', label: 'Attendence Status', visible: true },
     { key: 'attendanceType', label: 'Attendance Type', visible: true },
+    { key: 'leave', label: 'Leave', visible: true },
+    { key: 'leaveStatus', label: 'Leave Status', visible: false},
     { key: 'Tardiness', label: 'Tardiness', visible: true },
     { key: 'Undertime', label: 'Undertime', visible: true },
     { key: 'OTHourAndMin', label: 'OT Hours', visible: true },
@@ -300,12 +305,15 @@ const toggleSort = (columnKey) => {
 
 const showShiftModal = ref(false);
 const selectedItem = ref(null);
+const startDate = ref(null);
 const newShiftId = ref('');
+const tempTimeExternalCode = ref('');
 
 
 // cannot be updated da
 const handleShiftClick = (item) => {
     const shiftDate = new Date(item.startDate);
+
     const today = new Date();
     const diffTime = Math.abs(today - shiftDate);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -316,6 +324,8 @@ const handleShiftClick = (item) => {
     }
 
     selectedItem.value = item;
+    startDate.value = item.startDate
+    tempTimeExternalCode.value = item.tempTimeExternalCode
     newShiftId.value = item.ShiftId;
     showShiftModal.value = true;
 
@@ -323,7 +333,7 @@ const handleShiftClick = (item) => {
 
 // shift update function 
 const Shift = async () => {
-    updateShift(selectedItem.value.userId, newShiftId.value);
+    updateShift(LoggedInUserId.value.userId, startDate.value, newShiftId.value, tempTimeExternalCode);
 };
 
 const downloadExcel = () => {
@@ -520,6 +530,18 @@ const downloadExcel = () => {
                             </span>
                         </template>
 
+<template v-else-if="column.key === 'leave'">
+    <span :class="[
+        'px-2 py-1 rounded text-xs font-medium inline-block',
+        item.leaveStatus === 'APPROVED' || item.leaveStatus === 'Approved' ? 'bg-green-100 text-green-800' : '',
+        item.leaveStatus === 'PENDING' || item.leaveStatus === 'Pending' ? 'bg-orange-100 text-orange-800' : '',
+        item.leaveStatus === 'REJECTED' || item.leaveStatus === 'Rejected' ? 'bg-red-100 text-red-800' : ''
+    ]">
+        {{ item[column.key] || "-" }}
+    </span>
+</template>
+                        
+
                         <template v-else-if="column.key === 'attendanceType'">
                             <span class="px-2 py-1 text-xs font-medium inline-block">
                                 {{ row[column.key] || "-"  }}
@@ -642,6 +664,17 @@ const downloadExcel = () => {
         item.OTStatus === 'APPROVED' || item.OTStatus === 'Approved' ? 'bg-green-100 text-green-800' : '',
         item.OTStatus === 'PENDING_APPROVAL' ? 'bg-orange-100 text-orange-800' : '',
         item.OTStatus === 'REJECTED' || item.OTStatus === 'Rejected' ? 'bg-red-100 text-red-800' : ''
+    ]">
+        {{ item[column.key] || "-" }}
+    </span>
+</template>
+
+<template v-else-if="column.key === 'leave'">
+    <span :class="[
+        'px-2 py-1 rounded text-xs font-medium inline-block',
+        item.leaveStatus === 'APPROVED' || item.leaveStatus === 'Approved' ? 'bg-green-100 text-green-800' : '',
+        item.leaveStatus === 'PENDING' || item.leaveStatus === 'Pending' ? 'bg-orange-100 text-orange-800' : '',
+        item.leaveStatus === 'REJECTED' || item.leaveStatus === 'Rejected' ? 'bg-red-100 text-red-800' : ''
     ]">
         {{ item[column.key] || "-" }}
     </span>

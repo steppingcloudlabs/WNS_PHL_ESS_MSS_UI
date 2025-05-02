@@ -95,48 +95,4 @@ export const getTimesheetData = async (USERId = null, startDate = null, endDate 
   }
 };
 
-export const updateShift = async (loggedInUserId, startDate, workSchedule, tempTimeExternalCode) => {
-  console.log("updating shift:", loggedInUserId, userid, workSchedule);
 
-  try {
-    const response = await axios({
-      method: 'PUT',
-      url: `${constant.endpoint}/rest/catalog-service-rest/updateTemporaryTime`,
-
-      payload: {
-
-        //  tempTimeExternalCode will get it soon
-        tempTimeExternalCode: "",
-        workSchedule:"",
-        startDate:"",
-        CREATEDBY:loggedInUserId,
-      },
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
-
-    if (response.status === 200) {
-      return {
-        success: true,
-        data: response.data,
-        message: 'Shift updated successfully'
-      };
-    } else {
-      return {
-        success: false,
-        error: 'Failed to update shift',
-        message: response.data?.message || 'Unknown error occurred'
-      };
-    }
-
-  } catch (error) {
-    console.error('Error updating shift:', error);
-    return {
-      success: false,
-      error: error.response?.data || error.message,
-      message: error.response?.data?.message || 'Failed to update shift'
-    };
-  }
-
-};

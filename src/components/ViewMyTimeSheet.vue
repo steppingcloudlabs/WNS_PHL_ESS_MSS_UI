@@ -36,8 +36,8 @@ const reserDateFilter = () => {
     fromDate.value = "";
     toDate.value = "";
     sqe.value = null;
-    selectedEmployees.value = []; // Clear selected employees
-    searchInput.value = ''; // Clear search input
+    selectedEmployees.value = []; 
+    searchInput.value = ''; 
 };
 
 const dateSearch = async () => {

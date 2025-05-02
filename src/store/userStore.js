@@ -17,7 +17,8 @@ export const useUserStore = defineStore('user', {
     managerEmail: '',
     isManager: false,
     reportees: [],
-    TimesheetData : []
+    TimesheetData : [],
+    shiftDropdownList: []
 
   }),
 
@@ -31,7 +32,8 @@ export const useUserStore = defineStore('user', {
     }),
     getisManager:(state)=>state.isManager,
     reporteeNames : (state) => state.reportees.map(r => r.defaultFullName).filter(name => !!name),
-    timesheetData: (state) => state.TimesheetData || []
+    timesheetData: (state) => state.TimesheetData || [],
+    getshiftDropDownList :(state)=>state.shiftDropdownList || []
 
   },
 
@@ -53,6 +55,7 @@ export const useUserStore = defineStore('user', {
       
     },
 
+  // getTimeSheet Data
     async fetchTimesheet(USERIds = null, startDate = null, endDate = null) {
       console.log("user id array: ", USERIds);
     
@@ -65,11 +68,11 @@ export const useUserStore = defineStore('user', {
           USERIds = [defaultUserId];
         }
 
-        const uids = USERIds[0]
-    
+
         const response = await axios.get(`${constant.endpoint}/rest/catalog-service-rest/employeeTimeSheet`, {
           params: {
-            USERID: uids[0],
+            USERID: USERIds,
+            // USERID: userIdsArray,
             STARTDATE: startDate,
             ENDDATE: endDate
           }
@@ -83,10 +86,91 @@ export const useUserStore = defineStore('user', {
         console.error("Failed to fetch timesheet:", error);
         return false;
       }
-    }
+    },
+
+    async  updateShift(loggedInUserId, startDate, workSchedule, tempTimeExternalCode) {
+  
+      console.log("updating shift:", loggedInUserId, startDate, workSchedule, tempTimeExternalCode);
     
-    ,
+      try {
+        const response = await axios({
+          method: 'PUT',
+          url: `${constant.endpoint}/rest/catalog-service-rest/updateTemporaryTime`,
+          params: {
     
+            tempTimeExternalCode: tempTimeExternalCode,
+            workSchedule:workSchedule,
+            startDate:startDate,
+            CREATEDBY:loggedInUserId,
+          },
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+    
+        if (response.status === 200) {
+          return {
+            success: true,
+            data: response.data,
+            message: 'Shift updated successfully'
+          };
+        } else {
+          return {
+            success: false,
+            error: 'Failed to update shift',
+            message: response.data?.message || 'Unknown error occurred'
+          };
+        }
+    
+      } catch (error) {
+        console.error('Error updating shift:', error);
+        return {
+          success: false,
+          error: error.response?.data || error.message,
+          message: error.response?.data?.message || 'Failed to update shift'
+        };
+      }
+    
+    },
+
+    async fetchShiftList(userId, startDate) {
+      try {
+          const response = await axios.get(`${constant.endpoint}/rest/catalog-service-rest/shiftListForUser`, {
+              params: {
+                  USERID: userId,
+                  STARTDATE: startDate
+              }
+          });
+  
+          if (response.status === 200) {
+            console.log(
+              'respnse data: ', response.data);
+              // Store the shift list in state
+              this.shiftDropdownList = [...response.data.result];
+              
+              return {
+                  success: true,
+                  data: response.data.result
+              };
+          }
+          
+          return {
+              success: false,
+              error: 'Failed to fetch shift list',
+              data: []
+          };
+  
+      } catch (error) {
+          console.error('Error fetching shift list:', error);
+          return {
+              success: false,
+              error: error.response?.data || error.message,
+              data: []
+          };
+      }
+  },
+
+  
       
       setTimeSheet(data) {
         // Handle both direct array and { result: array } responses
@@ -95,9 +179,8 @@ export const useUserStore = defineStore('user', {
         
         // Maintain reactivity by replacing the array
         this.TimesheetData = [...timesheetData];
-        
-        console.log("Timesheet data updated:", this.TimesheetData);
       },
+
 
     clearUser() {
       this.$reset()

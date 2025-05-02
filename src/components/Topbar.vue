@@ -14,6 +14,16 @@ const toggleSidebar = () => {
 };
 
 const userStore = useUserStore();
+// <!-- remove in production -->
+const refreshapi = () => {
+  const currentDate = new Date();
+    const sevenDaysAgo = new Date(currentDate);
+    sevenDaysAgo.setDate(currentDate.getDate() - 7);
+
+    const defaultEndDate = currentDate.toISOString().split('T')[0];
+    const defaultStartDate = sevenDaysAgo.toISOString().split('T')[0];
+     userStore.fetchTimesheet(null, defaultStartDate, defaultEndDate);
+}
 
 </script>
 
@@ -32,6 +42,12 @@ const userStore = useUserStore();
         </div>
     </div>
 
+    <!-- remove in production -->
+    <div
+    @click="refreshapi"
+    class="border font-bold  border-black p-2 rounded-2xl hover:cursor-pointer">
+      Refresh API 🔃
+    </div>
 
     <div class=" hover:cursor-pointer flex justify-center items-center md:gap-x-2">
       <div>
@@ -47,5 +63,7 @@ const userStore = useUserStore();
         <Power class="w-5 h-5"/>
       </button>
     </div>
+
+
   </div>
 </template>

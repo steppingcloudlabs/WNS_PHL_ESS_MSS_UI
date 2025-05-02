@@ -2,8 +2,7 @@
 import * as XLSX from 'xlsx';
 import { Download, Expand, ListTree, ToggleLeft, ChevronDown, Trash, ChevronUp, Check, Pencil, Search, Edit } from 'lucide-vue-next';
 import { ref, computed, onMounted, onUnmounted, watch, } from 'vue';
-import { getTimesheetData } from '../store/module/userModule';
-import { updateShift } from '../store/module/userModule';
+// import { updateShift } from '../store/userStore';
 import { useUserStore } from '../store/userStore';
 
 
@@ -12,6 +11,12 @@ const userStore = useUserStore();
 
 // Access data through computed property
 const timesheetData = computed(() => userStore.timesheetData);
+const shiftdropdownData = computed(()=>userStore.getshiftDropDownList);
+
+console.log("shift data: ",shiftdropdownData.value);
+
+const LoggedInUserId = computed(() => userStore.userInfo);
+console.log("loggedin USer: ", LoggedInUserId.value.userId);
 
 
 // Load data when component mounts
@@ -23,7 +28,6 @@ onMounted(async () => {
     const defaultEndDate = currentDate.toISOString().split('T')[0];
     const defaultStartDate = sevenDaysAgo.toISOString().split('T')[0];
     await userStore.fetchTimesheet(null, defaultStartDate, defaultEndDate);
-    console.log("Current timesheet data:", timesheetData.value);
 });
 
 
@@ -78,10 +82,10 @@ const filteredTimesheetData = computed(() => {
             ));
 
         const matchesMeal = !filters.value.meal ||
-            (item.Meal?.toLowerCase() === filters.value.meal.toLowerCase());
+            (item.Meal && item.Meal.toLowerCase() === filters.value.meal.toLowerCase());
 
         const matchesTransport = !filters.value.transport ||
-            (item.Transport?.toLowerCase() === filters.value.transport.toLowerCase());
+            (item.Transport && item.Transport.toLowerCase() === filters.value.transport.toLowerCase());
 
         return matchesRegularization && matchesOtStatus && matchesMeal && matchesTransport;
 
@@ -89,54 +93,37 @@ const filteredTimesheetData = computed(() => {
 });
 
 const getRegStatus = (item) => {
-    // If RegStatus is present, return it
+    if (item.attendanceType === 'WEXTSWIPE') {
+        return 'APPROVED';
+    }
+
     if (item.RegStatus) {
         return item.RegStatus;
     }
-
-    // Check timesheet array for WEXTSWIPE
-    if (item.timeSheet && Array.isArray(item.timeSheet)) {
-        const hasWextswipe = item.timeSheet.some(ts =>
-            ts.timeTypeGroup === 'WEXTSWIPE' || ts.timeType === 'WEXTSWIPE'
-        );
-        if (hasWextswipe) {
-            return 'APPROVED';
-        }
-    }
-
-    // Default case
     return '-';
 };
 
-const getAttendanceType = (item) => {
-    if (item.timeSheet && Array.isArray(item.timeSheet)) {
-        const timeType = item.timeSheet.find(ts =>
-            ts.timeTypeGroup === 'WEXTSWIPE' ||
-            ts.timeType === 'WEXTSWIPE'
-        );
-        if (timeType) {
-            return timeType.timeType || timeType.timeTypeGroup;
-        }
-    }
-    return 'REGULAR';
-};
 
 // COLUMS CONTROLS
 const columns = ref([
     // { key: 'srNo', label: 'Sr.No', visible: true },
-    { key: 'userId', label: 'Used ID', visible: true },
+    { key: 'userId', label: 'User ID', visible: true },
     { key: 'startDate', label: 'Shift Date', visible: true },
     { key: 'ShiftId', label: 'Shift', visible: true },
     { key: 'inTime', label: 'In Time', visible: true },
     { key: 'outTime', label: 'Out Time', visible: true },
     { key: 'RegStatus', label: 'Attendence Status', visible: true },
     { key: 'attendanceType', label: 'Attendance Type', visible: true },
+    { key: 'leave', label: 'Leave', visible: true },
+    { key: 'leaveStatus', label: 'Leave Status', visible: false },
     { key: 'Tardiness', label: 'Tardiness', visible: true },
     { key: 'Undertime', label: 'Undertime', visible: true },
     { key: 'OTHourAndMin', label: 'OT Hours', visible: true },
-    { key: 'OTStatus', label: 'OT Status', visible: true },
-    { key: 'ND1', label: 'ND1', visible: true },
-    { key: 'ND2', label: 'ND2', visible: true },
+    { key: 'OTStatus', label: 'OT Status', visible: false },
+    { key: 'ND11', label: 'ND11', visible: true },
+    { key: 'ND12', label: 'ND12', visible: true },
+    { key: 'ND21', label: 'ND21', visible: true },
+    { key: 'ND22', label: 'ND22', visible: true },
     { key: 'Meal', label: 'Meal', visible: true },
     { key: 'Transport', label: 'Transport', visible: true }
 
@@ -322,32 +309,51 @@ const toggleSort = (columnKey) => {
 };
 
 const showShiftModal = ref(false);
+// const loadingShifts = ref(false);
 const selectedItem = ref(null);
-const newShiftId = ref('');
+const startDate = ref(null);
+const workSchedule = ref('');
+const tempTimeExternalCode = ref('');
 
 
 // cannot be updated da
 const handleShiftClick = (item) => {
+
+    console.log("clicked shift:", item);
+
     const shiftDate = new Date(item.startDate);
     const today = new Date();
     const diffTime = Math.abs(today - shiftDate);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays > 60) {
         alert('Cannot update shift data older than 60 days');
         return;
     }
-    
+
+    showShiftModal.value = true;
+    // loadingShifts.value = true;
+ 
+    try {
+        const result =  userStore.fetchShiftList(LoggedInUserId.value.userId, item.startDate);
+        
+    } catch (error) {
+        console.error('Error loading shifts:', error);
+        alert('Error loading shift list');
+        return;
+    }
+
     selectedItem.value = item;
-    newShiftId.value = item.ShiftId;
+    startDate.value = item.startDate
+    tempTimeExternalCode.value = item.tempTimeExternalCode
+    workSchedule.value = item.workSchedule;
     showShiftModal.value = true;
 
 };
 
 // shift update function 
 const Shift = async () => {
-    
-    updateShift(selectedItem.value.userId, newShiftId.value);
+    userStore.updateShift(LoggedInUserId.value.userId, startDate.value, workSchedule.value, tempTimeExternalCode.value);
 };
 
 const downloadExcel = () => {
@@ -532,25 +538,57 @@ const downloadExcel = () => {
                 <div v-for="column in visibleColumns" :key="column.key" class="grid grid-cols-2 gap-2 py-1">
                     <span class="font-semibold text-sm">{{ column.label }}:</span>
                     <span class="text-sm text-gray-800">
+
                         <template v-if="column.key === 'RegStatus' || column.key === 'OTStatus'">
                             <span :class="[
                                 'px-2 py-1 rounded-full text-xs font-medium inline-block',
-                                row[column.key] === 'Approved' ? 'bg-green-100 text-green-800' : '',
-                                row[column.key] === 'Pending' ? 'bg-yellow-100 text-yellow-800' : '',
-                                row[column.key] === 'Rejected' ? 'bg-red-100 text-red-800' : ''
+                                row[column.key] === 'APPROVED' ? 'bg-green-100 text-green-800' : '',
+                                row[column.key] === 'PENDING' ? 'bg-yellow-100 text-yellow-800' : '',
+                                row[column.key] === 'REJECTED' ? 'bg-red-100 text-red-800' : ''
+                            ]">
+                                {{ getRegStatus(row) }}
+                            </span>
+                        </template>
+
+                        <template v-else-if="column.key === 'leave'">
+                            <span :class="[
+                                'px-2 py-1 rounded text-xs font-medium inline-block',
+                                row.leaveStatus === 'APPROVED' || row.leaveStatus === 'Approved' ? 'bg-green-100 text-green-800' : '',
+                                row.leaveStatus === 'PENDING' || row.leaveStatus === 'Pending' ? 'bg-orange-100 text-orange-800' : '',
+                                row.leaveStatus === 'REJECTED' || row.leaveStatus === 'Rejected' ? 'bg-red-100 text-red-800' : ''
                             ]">
                                 {{ row[column.key] || "-" }}
                             </span>
                         </template>
 
+
                         <template v-else-if="column.key === 'attendanceType'">
                             <span class="px-2 py-1 text-xs font-medium inline-block">
-                                {{ getAttendanceType(row) }}
+                                {{ row[column.key] || "-" }}
+                            </span>
+                        </template>
+                        <template v-else-if="column.key === 'userId'">
+                            <span class="px-2 py-1 text-xs font-medium inline-block">
+                                {{ row[column.key] || "-" }}
+                            </span>
+                        </template>
+
+                        <!-- Meal and Transport  -->
+                        <template v-else-if="column.key === 'Meal' || column.key === 'Transport'">
+                            <span :class="[
+                                'px-2 py-1 rounded text-xs font-medium inline-block',
+                                row[column.key] === 'approved' ? 'bg-green-100 text-green-800' : '',
+                                row[column.key] === 'applied' ? 'bg-orange-100 text-orange-800' : '',
+                                row[column.key] === 'rejected' ? 'bg-red-100 text-red-800' : '',
+                            ]">
+                                {{ row[`${column.key}Hours`] || "-" }}
+                                {{ row[column.key] ? `(${row[column.key]})` : '' }}
                             </span>
                         </template>
 
 
-                        <template v-if="column.key === 'inTime' || column.key === 'outTime'">
+
+                        <template v-else-if="column.key === 'inTime' || column.key === 'outTime'">
                             {{ formatISODuration(row[column.key]) || "-" }}
                         </template>
 
@@ -606,56 +644,101 @@ const downloadExcel = () => {
                             </template>
 
                             <template v-else-if="column.key === 'attendanceType'">
-    <span class="px-2 py-1 text-xs font-medium inline-block">
-        {{ getAttendanceType(item) }}
-    </span>
-</template>
-
-                            <!-- shift id and popup for update -->
-                            <template v-else-if="column.key === 'ShiftId'">
-                                <span @click="handleShiftClick(item)"
-                                    class="cursor-pointer hover:text-orange-500 hover:underline">
+                                <span class="px-2 py-1 text-xs font-medium inline-block">
                                     {{ item[column.key] || "-" }}
                                 </span>
-                                <div v-if="showShiftModal"
-                                    class="fixed inset-0  bg-opacity-30 flex items-center justify-center z-50">
-                                    <div class="bg-white rounded-lg p-6 w-96 shadow-xl">
-                                        <h3 class="text-lg font-semibold mb-4">Update Shift</h3>
-
-                                        <div class="mb-4">
-                                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                                New Shift ID
-                                            </label>
-                                            <input type="text" v-model="newShiftId"
-                                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                                                placeholder="Enter new shift ID">
-                                        </div>
-
-                                        <div class="flex justify-end gap-3">
-                                            <button @click="showShiftModal = false"
-                                                class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
-                                                Cancel
-                                            </button>
-                                            <button @click="Shift"
-                                                class="px-4 py-2 text-sm font-medium text-white bg-orange-500 rounded-md hover:bg-orange-600">
-                                                Update
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
                             </template>
 
-                            <template
-                                v-else-if="column.key === 'OTStatus' || column.key === 'Meal' || column.key === 'Transport'">
+                            <!-- shift id and popup for update -->
+<template v-else-if="column.key === 'ShiftId'">
+    <span @click="handleShiftClick(item)"
+        class="cursor-pointer hover:text-orange-500 hover:underline">
+        {{ item[column.key] || "-" }}
+    </span>
+    <div v-if="showShiftModal"
+        class="fixed inset-0  bg-opacity-30 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 w-96 shadow-xl">
+            <h3 class="text-lg font-semibold mb-4">Update Shift</h3>
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Select New Shift
+                </label>
+                <select 
+                    v-model="newShiftId"
+                    class="w-full  px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                >
+                    <option value="">Select a shift</option>
+                    <option 
+                    class=""
+                        v-for="shift in shiftdropdownData" 
+                        :key="shift.externalCode"
+                        :value="shift.externalCode"
+                    >
+                       shift code:  {{ shift.SHIFTCODE }}, shiftexternalCode: ({{ shift.externalCode }})
+
+                    </option>
+                </select>
+            </div>
+
+            <div class="flex justify-end gap-3">
+                <button @click="showShiftModal = false"
+                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
+                    Cancel
+                </button>
+                <button 
+                    @click="Shift"
+                    :disabled="!newShiftId"
+                    class="px-4 py-2 text-sm font-medium text-white bg-orange-500 rounded-md hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed">
+                    Update
+                </button>
+            </div>
+        </div>
+    </div>
+</template>
+                            <!-- OT status  and Hours-->
+                            <template v-else-if="column.key === 'OTHourAndMin'">
                                 <span :class="[
-                                    'px-2 py-1 rounded-full text-xs text-center font-semibold inline-block',
-                                    item[column.key] === 'Approved' || 'APPROVED' ? ' text-green-800' : '',
-                                    item[column.key] === 'PENDING_APPROVAL' ? ' text-yellow-800' : ''
+                                    'px-2 py-1 rounded text-xs font-medium inline-block',
+                                    item.OTStatus === 'APPROVED' || item.OTStatus === 'Approved' ? 'bg-green-100 text-green-800' : '',
+                                    item.OTStatus === 'PENDING_APPROVAL' ? 'bg-orange-100 text-orange-800' : '',
+                                    item.OTStatus === 'REJECTED' || item.OTStatus === 'Rejected' ? 'bg-red-100 text-red-800' : ''
                                 ]">
-                                    {{ item[column.key] === 'PENDING_APPROVAL' ? 'PENDING APPROVAL' :
-                                        item[column.key] || "-" }}
+                                    {{ item[column.key] || "-" }}
                                 </span>
                             </template>
+
+                            <!-- leave || status -->
+                            <template v-else-if="column.key === 'leave'">
+                                <span :class="[
+                                    'px-2 py-1 rounded text-xs font-medium inline-block',
+                                    item?.leaveStatus === 'APPROVED' || item?.leaveStatus === 'Approved' ? 'bg-green-100 text-green-800' : '',
+                                    item?.leaveStatus === 'PENDING' || item?.leaveStatus === 'Pending' ? 'bg-orange-100 text-orange-800' : '',
+                                    item?.leaveStatus === 'REJECTED' || item?.leaveStatus === 'Rejected' ? 'bg-red-100 text-red-800' : ''
+                                ]">
+                                    {{ item[column.key] || "-" }}
+                                </span>
+                            </template>
+
+
+                            <template v-else-if="column.key === 'Meal' || column.key === 'Transport'">
+                                <span :class="[
+                                    'px-2 py-1 rounded text-xs font-medium inline-block',
+                                    // Status-based background colors
+                                    item[column.key] === 'approved' ? 'bg-green-100 text-green-800' : '',
+                                    item[column.key] === 'applied' || item[column.key] === 'pending' ? 'bg-orange-100 text-orange-800' : '',
+                                    item[column.key] === 'rejected' ? 'bg-red-100 text-red-800' : '',
+                                ]">
+                                    <template v-if="item[column.key] === 'approved'">
+                                        {{ item[`${column.key}Hours`] || "-" }}
+                                    </template>
+                                    <template v-else>
+                                        {{ item[`${column.key}Hours`] ? `${item[`${column.key}Hours`]}
+                                        (${item[column.key]})` : "-" }}
+                                    </template>
+                                </span>
+                            </template>
+
 
                             <template v-else-if="column.key === 'inTime' || column.key === 'outTime'">
                                 {{ formatISODuration(item[column.key] || "-") }}

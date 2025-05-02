@@ -95,42 +95,4 @@ export const getTimesheetData = async (USERId = null, startDate = null, endDate 
   }
 };
 
-export const updateShift = async (id, shiftid) => {
-  console.log("updating shift:", id, shiftid);
 
-  try {
-    const response = await axios({
-      method: 'PUT',
-      url: `${constant.endpoint}/rest/catalog-service-rest/updateShift`,
-      data: {
-        ID: id,
-        ShiftId: shiftid
-      },
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
-
-    if (response.status === 200) {
-      return {
-        success: true,
-        data: response.data,
-        message: 'Shift updated successfully'
-      };
-    } else {
-      return {
-        success: false,
-        error: 'Failed to update shift',
-        message: response.data?.message || 'Unknown error occurred'
-      };
-    }
-
-  } catch (error) {
-    console.error('Error updating shift:', error);
-    return {
-      success: false,
-      error: error.response?.data || error.message,
-      message: error.response?.data?.message || 'Failed to update shift'
-    };
-  }
-};

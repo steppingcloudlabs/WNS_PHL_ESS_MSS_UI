@@ -30,66 +30,67 @@ const fromDate = ref('');
 const toDate = ref('');
 
 const reserDateFilter = () => {
+    userStore.fetchTimesheet(null, defaultStartDate, defaultEndDate);
+    fd.value = defaultStartDate;
+    td.value = defaultEndDate;
+    fromDate.value = "";
+    toDate.value = "";
+    sqe.value = null;
+    selectedEmployees.value = []; 
+    searchInput.value = ''; 
+};
 
-    userStore.fetchTimesheet(null, defaultStartDate, defaultEndDate)
+const dateSearch = async () => {
 
-    fd.value=defaultStartDate;
-    td.value=defaultEndDate;
-    fromDate.value = ""
-    toDate.value = ""
-    sqe.value=null
-
-}
-
-const dateSearch = () => {
-    searchQueryEmployee.value = sqe.value || null;
-    const selectedReportee = userStore.reportees.find(
-        r => r.defaultFullName === sqe.value
-    );
 
     fromDate.value = fd.value;
     toDate.value = td.value;
-
-
-
+    
     if (!fromDate.value || !toDate.value) {
         alert('Please select both dates');
         return;
     }
-    
 
 
+    // Date validations
+    const start = new Date(fromDate.value);
+    const end = new Date(toDate.value);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const diffTime = Math.abs(end - start);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; 
+
+    // Validate date range 
+    // uncomment in production
+
+    if (diffDays < 7 || diffDays > 30) {
+        alert('Please select a date range between 7 and 30 days');
+        return;
+    }
     if (fromDate.value > toDate.value) {
         alert('From date cannot be after To date');
         reserDateFilter();
         return;
     }
 
-      // Calculate date difference
-    const start = new Date(fromDate.value);
-    const end = new Date(toDate.value);
-    const diffTime = Math.abs(end - start);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; 
 
-    // Validate date range 
-    // uncomment in production
-    // if (diffDays < 7 || diffDays > 30) {
-    //     alert('Please select a date range between 7 and 30 days');
-    //     return;
-    // }
+    // Get array of selected employee IDs
+    const employeeIds = selectedEmployees.value.map(emp => emp.userId);
 
-    // if (fromDate.value > toDate.value) {
-    //     alert('From date cannot be after To date');
-    //     reserDateFilter();
-    //     return;
-    // }
-
+    console.log("emp ids: ", employeeIds);
     
-        getTimesheetData(null, fromDate.value, toDate.value);
-    
-
-    
-
+    if (employeeIds.length === 0) {
+        // If no employees selected, use current user's data
+        userStore.fetchTimesheet(null, fromDate.value, toDate.value);
+    } else {
+        // Send array of employee IDs to backend
+        try {
+            await userStore.fetchTimesheet(employeeIds, fromDate.value, toDate.value);
+        } catch (error) {
+            alert('Error fetching timesheet data: ' + error.message);
+        }
+    }
 };
 
 
@@ -100,13 +101,23 @@ const filteredReportees = computed(() => {
         reportee?.UserId?.toString().includes(sqe.value)
     );
 });
+
+const selectedEmployees = ref([]);
+const searchInput = ref('');
+
 const showDropdown = ref(false);
 const selectReportee = (reportee) => {
-    sqe.value = reportee.defaultFullName;
+    if (!selectedEmployees.value.some(emp => emp.userId === reportee.userId)) {
+        selectedEmployees.value.push(reportee);
+    }
+    searchInput.value = '';
     showDropdown.value = false;
-    // Pass the reportee's UserId to getTimesheetData
-    // getTimesheetData(reportee.userId, fromDate.value, toDate.value);
 };
+
+const removeEmployee = (userId) => {
+    selectedEmployees.value = selectedEmployees.value.filter(emp => emp.userId !== userId);
+};
+
 
 // searchEmployee function to use the selected reportee's data
 const searchEmployee = () => {
@@ -130,38 +141,59 @@ const manager = computed(() => userStore.getisManager);
 
         <!-- search -->
 
-        <div class="flex-1 min-w-0 my-4" v-if="manager">
-            <label class="block mb-2  text-gray-700">Employee Name / ID *</label>
-            <div class="flex flex-row items-center">
-                <div class="relative w-[300px]">
-                    <input type="text" placeholder="Search Employee Name / ID" v-model="sqe"
-                        @focus="showDropdown = true"
-                        class="w-full px-3 py-2 border-2 border-amber-600 rounded-md focus:outline-none" required>
-                    <!-- Dropdown list -->
-                    
-                    <div v-if="showDropdown && filteredReportees.length > 0"
-                        class="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                        <div v-for="reportee in filteredReportees" :key="reportee.UserId"
-                            @click="selectReportee(reportee)"
-                            class="px-4 py-2 hover:bg-gray-100 cursor-pointer flex justify-between items-center">
-                            <span> ({{ reportee.userId }}) {{ reportee.defaultFullName }}</span>
-                            <span class="text-sm text-gray-500">{{ reportee.UserId }}</span>
-                        </div>
-                    </div>
-                
-                </div>
-                <div @click="searchEmployee"
-                    class="hover:cursor-pointer ml-3 flex flex-row items-center text-xl bg-red-400 py-2 px-2 rounded-md">
-                    <Search class="w-6 h-6" /> Search
-                </div>
-                <div
-                    @click="reserDateFilter"
-                    class="hover:cursor-pointer ml-3 flex flex-row items-center text-xl bg-red-400 py-2 px-2 rounded-md">
-                    <RefreshCw class="w-6 h-6" />
+        <!-- Replace the existing search input section -->
+<div class="flex-1 min-w-0 my-4" v-if="manager">
+    <label class="block mb-2 text-gray-700">Employee Name / ID *</label>
+    <!-- Selected employees tags -->
+    <div class="flex flex-wrap gap-2 mb-2">
+        <div v-for="employee in selectedEmployees" 
+            :key="employee.userId"
+            class="flex items-center gap-1 px-2 py-1 bg-amber-100 rounded-md">
+            <span class="text-sm">({{ employee.userId }}) {{ employee.defaultFullName }}</span>
+            <button @click="removeEmployee(employee.userId)" 
+                class="text-gray-500 hover:text-red-500">
+                ×
+            </button>
+        </div>
+    </div>
+
+    <!-- Search input and dropdown -->
+    <div class="flex flex-row items-center">
+        <div class="relative w-[300px]">
+            <input type="text" 
+                placeholder="Search Employee Name / ID" 
+                v-model="searchInput"
+                @focus="showDropdown = true"
+                @blur="setTimeout(() => showDropdown = false, 200)"
+                class="w-full px-3 py-2 border-2 border-amber-600 rounded-md focus:outline-none">
+            
+            <div v-if="showDropdown && filteredReportees.length > 0"
+                class="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                <div v-for="reportee in filteredReportees" 
+                    :key="reportee.UserId"
+                    @click="selectReportee(reportee)"
+                    class="px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                    <span>({{ reportee.userId }}) {{ reportee.defaultFullName }}</span>
                 </div>
             </div>
-
         </div>
+
+        <button @click="dateSearch"
+            class="hover:cursor-pointer ml-3 flex items-center gap-2 bg-red-400 py-2 px-4 rounded-md text-white">
+            <Search 
+            @click="dateSearch"
+            class="w-5 h-5" />
+            <span>Search</span>
+        </button>
+        
+        <button @click="reserDateFilter"
+            class="hover:cursor-pointer ml-3 flex items-center gap-2 bg-red-400 py-2 px-4 rounded-md text-white">
+            <RefreshCw class="w-5 h-5" />
+            <span>Reset</span>
+        </button>
+
+    </div>
+</div>
 
         <!-- date filter -->
 

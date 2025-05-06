@@ -120,10 +120,10 @@ const columns = ref([
     { key: 'Undertime', label: 'Undertime', visible: true },
     { key: 'OTHourAndMin', label: 'OT Hours', visible: true },
     { key: 'OTStatus', label: 'OT Status', visible: false },
-    { key: 'ND11', label: 'ND11', visible: true },
-    { key: 'ND12', label: 'ND12', visible: true },
-    { key: 'ND21', label: 'ND21', visible: true },
-    { key: 'ND22', label: 'ND22', visible: true },
+    { key: 'ND1', label: 'ND1', visible: true },
+    { key: 'ExcessND1', label: 'Excess ND1', visible: true },
+    { key: 'ND2', label: 'ND2', visible: true },
+    { key: 'ExcessND2', label: 'Excess ND2', visible: true },
     { key: 'Meal', label: 'Meal', visible: true },
     { key: 'Transport', label: 'Transport', visible: true }
 

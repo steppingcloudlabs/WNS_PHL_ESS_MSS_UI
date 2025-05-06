@@ -11,9 +11,6 @@ const userStore = useUserStore();
 
 // Access data through computed property
 const timesheetData = computed(() => userStore.timesheetData);
-const shiftdropdownData = computed(()=>userStore.getshiftDropDownList);
-
-console.log("shift data: ",shiftdropdownData.value);
 
 const LoggedInUserId = computed(() => userStore.userInfo);
 console.log("loggedin USer: ", LoggedInUserId.value.userId);
@@ -43,9 +40,6 @@ const props = defineProps({
         default: false
     }
 });
-
-
-
 
 
 const isFullscreen = ref(false);
@@ -311,49 +305,56 @@ const toggleSort = (columnKey) => {
 const showShiftModal = ref(false);
 // const loadingShifts = ref(false);
 const selectedItem = ref(null);
+
 const startDate = ref(null);
-const workSchedule = ref('');
 const tempTimeExternalCode = ref('');
+const workSchedule = ref('');
 
 
-// cannot be updated da
-const handleShiftClick = (item) => {
 
-    console.log("clicked shift:", item);
+const shiftdropdownData = ref([]); 
 
-    const shiftDate = new Date(item.startDate);
+// shift update 
+const handleShiftClick = async (item) => {
+    startDate.value = item.startDate;
+    tempTimeExternalCode.value = item.tempTimeExternalCode;
+    
     const today = new Date();
-    const diffTime = Math.abs(today - shiftDate);
+    const diffTime = Math.abs(today - item.startDate);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
 
     if (diffDays > 60) {
         alert('Cannot update shift data older than 60 days');
         return;
     }
-
-    showShiftModal.value = true;
+    
+    
+    // showShiftModal.value = true;
     // loadingShifts.value = true;
  
     try {
-        const result =  userStore.fetchShiftList(LoggedInUserId.value.userId, item.startDate);
-        
+        // Add await here and properly handle the response
+        const result = await  userStore.fetchShiftList(LoggedInUserId.value.userId, item.startDate);
+        if (result.success) {
+            shiftdropdownData.value = result.data;
+            showShiftModal.value = true ;
+        } else {
+            alert('Failed to load shift list: ' + result.error);
+        }
     } catch (error) {
         console.error('Error loading shifts:', error);
         alert('Error loading shift list');
         return;
     }
 
-    selectedItem.value = item;
-    startDate.value = item.startDate
-    tempTimeExternalCode.value = item.tempTimeExternalCode
-    workSchedule.value = item.workSchedule;
-    showShiftModal.value = true;
-
 };
 
 // shift update function 
 const Shift = async () => {
-    userStore.updateShift(LoggedInUserId.value.userId, startDate.value, workSchedule.value, tempTimeExternalCode.value);
+
+
+    userStore.updateShift(LoggedInUserId.value.userId, startDate.value, workSchedule.value , tempTimeExternalCode.value);
 };
 
 const downloadExcel = () => {
@@ -665,7 +666,7 @@ const downloadExcel = () => {
                     Select New Shift
                 </label>
                 <select 
-                    v-model="newShiftId"
+                    v-model="workSchedule"
                     class="w-full  px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
                 >
                     <option value="">Select a shift</option>
@@ -673,9 +674,9 @@ const downloadExcel = () => {
                     class=""
                         v-for="shift in shiftdropdownData" 
                         :key="shift.externalCode"
-                        :value="shift.externalCode"
+                        :value="shift.SHIFTCODE"
                     >
-                       shift code:  {{ shift.SHIFTCODE }}, shiftexternalCode: ({{ shift.externalCode }})
+                       {{ shift.SHIFTCODE  + "  "}} ({{shift.externalCode}})
 
                     </option>
                 </select>
@@ -688,7 +689,6 @@ const downloadExcel = () => {
                 </button>
                 <button 
                     @click="Shift"
-                    :disabled="!newShiftId"
                     class="px-4 py-2 text-sm font-medium text-white bg-orange-500 rounded-md hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed">
                     Update
                 </button>

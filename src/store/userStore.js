@@ -16,9 +16,9 @@ export const useUserStore = defineStore('user', {
     managerName: '',
     managerEmail: '',
     isManager: false,
+    workscheduleCode:"",
     reportees: [],
     TimesheetData : [],
-    shiftDropdownList: []
 
   }),
 
@@ -33,7 +33,7 @@ export const useUserStore = defineStore('user', {
     getisManager:(state)=>state.isManager,
     reporteeNames : (state) => state.reportees.map(r => r.defaultFullName).filter(name => !!name),
     timesheetData: (state) => state.TimesheetData || [],
-    getshiftDropDownList :(state)=>state.shiftDropdownList || []
+    getManagerWorkSchedule: (state)=>state.workscheduleCode
 
   },
 
@@ -41,6 +41,7 @@ export const useUserStore = defineStore('user', {
     setUser(data) {
       console.log("setting user full anme : ",data.defaultFullName)
       this.userId = data.UserId
+      this.workscheduleCode = data.workscheduleCode;
       this.fullName = data.defaultFullName
       this.email = data.email
       this.country = data.country
@@ -68,7 +69,6 @@ export const useUserStore = defineStore('user', {
           USERIds = [defaultUserId];
         }
 
-
         const response = await axios.get(`${constant.endpoint}/rest/catalog-service-rest/employeeTimeSheet`, {
           params: {
             USERID: USERIds,
@@ -88,9 +88,9 @@ export const useUserStore = defineStore('user', {
       }
     },
 
-    async  updateShift(loggedInUserId, startDate, workSchedule, tempTimeExternalCode) {
+    async  updateShift(loggedInUserId, startDate, workSchedule,  tempTimeExternalCode) {
   
-      console.log("updating shift:", loggedInUserId, startDate, workSchedule, tempTimeExternalCode);
+      console.log("updating shift:", loggedInUserId, startDate, tempTimeExternalCode, workSchedule);
     
       try {
         const response = await axios({

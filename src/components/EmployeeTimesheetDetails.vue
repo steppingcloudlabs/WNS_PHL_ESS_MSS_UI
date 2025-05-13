@@ -311,6 +311,7 @@ const tempTimeExternalCode = ref('');
 const workSchedule = ref('');
 
 
+const loadingShifts = ref(false); // Add loading state for shifts
 
 const shiftdropdownData = ref([]); 
 
@@ -318,36 +319,34 @@ const shiftdropdownData = ref([]);
 const handleShiftClick = async (item) => {
     startDate.value = item.startDate;
     tempTimeExternalCode.value = item.tempTimeExternalCode;
-    
+
     const today = new Date();
     const diffTime = Math.abs(today - item.startDate);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        
 
     if (diffDays > 60) {
         alert('Cannot update shift data older than 60 days');
         return;
     }
-    
-    
-    // showShiftModal.value = true;
-    // loadingShifts.value = true;
- 
+
+    loadingShifts.value = true; // Start loader
+    console.log('Loading Shifts:', loadingShifts.value); // Debugging
+
     try {
-        // Add await here and properly handle the response
-        const result = await  userStore.fetchShiftList(LoggedInUserId.value.userId, item.startDate);
+        const result = await userStore.fetchShiftList(LoggedInUserId.value.userId, item.startDate);
         if (result.success) {
             shiftdropdownData.value = result.data;
-            showShiftModal.value = true ;
+            showShiftModal.value = true;
         } else {
             alert('Failed to load shift list: ' + result.error);
         }
     } catch (error) {
         console.error('Error loading shifts:', error);
         alert('Error loading shift list');
-        return;
+    } finally {
+        loadingShifts.value = false; // Stop loader
+        console.log('Loading Shifts:', loadingShifts.value); // Debugging
     }
-
 };
 
 // shift update function 
@@ -399,12 +398,12 @@ const downloadExcel = () => {
 
 <template>
 
-    <!-- <div v-if="loading" class="flex items-center justify-center min-h-[400px]">
+    <div v-if="loading" class="flex items-center justify-center min-h-[400px]">
         <div class="flex flex-col items-center gap-4">
             <div class="animate-spin rounded-full h-12 w-12 border-4 border-orange-500 border-t-transparent"> </div>
             <span class="text-gray-600">Loading timesheet data... </span>
         </div>
-    </div> -->
+    </div>
 
     <div :class="{ ' fixed inset-0 z-50 bg-white overflow-auto': isFullscreen }" class="shadow-md rounded-lg mx-auto">
         <div class="md:w-full p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -651,51 +650,58 @@ const downloadExcel = () => {
                             </template>
 
                             <!-- shift id and popup for update -->
-<template v-else-if="column.key === 'ShiftId'">
-    <span @click="handleShiftClick(item)"
-        class="cursor-pointer hover:text-orange-500 hover:underline">
-        {{ item[column.key] || "-" }}
-    </span>
-    <div v-if="showShiftModal"
-        class="fixed inset-0  bg-opacity-30 flex items-center justify-center z-50">
-        <div class="bg-white rounded-lg p-6 w-96 shadow-xl">
-            <h3 class="text-lg font-semibold mb-4">Update Shift</h3>
+<template v-if="column.key === 'ShiftId'">
+        <span @click="handleShiftClick(item)"
+            class="cursor-pointer hover:text-orange-500 hover:underline">
+            {{ item[column.key] || "-" }}
+        </span>
+        <div v-if="showShiftModal"
+            class="fixed inset-0 bg-opacity-30 flex items-center justify-center z-50">
+            <div class="bg-white rounded-lg p-6 w-96 shadow-xl">
+                <h3 class="text-lg font-semibold mb-4">Update Shift</h3>
 
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Select New Shift
-                </label>
-                <select 
-                    v-model="workSchedule"
-                    class="w-full  px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                >
-                    <option value="">Select a shift</option>
-                    <option 
-                    class=""
-                        v-for="shift in shiftdropdownData" 
-                        :key="shift.externalCode"
-                        :value="shift.SHIFTCODE"
-                    >
-                       {{ shift.SHIFTCODE  + "  "}} ({{shift.externalCode}})
+                <div v-if="loadingShifts" class="flex justify-center items-center mb-4">
+                    <svg class="animate-spin h-6 w-6 text-orange-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                    </svg>
+                </div>
 
-                    </option>
-                </select>
-            </div>
+                <div v-else>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Select New Shift
+                        </label>
+                        <select 
+                            v-model="workSchedule"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        >
+                            <option value="">Select a shift</option>
+                            <option 
+                                v-for="shift in shiftdropdownData" 
+                                :key="shift.externalCode"
+                                :value="shift.SHIFTCODE"
+                            >
+                                {{ shift.SHIFTCODE + "  " }} ({{ shift.externalCode }})
+                            </option>
+                        </select>
+                    </div>
 
-            <div class="flex justify-end gap-3">
-                <button @click="showShiftModal = false"
-                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
-                    Cancel
-                </button>
-                <button 
-                    @click="Shift"
-                    class="px-4 py-2 text-sm font-medium text-white bg-orange-500 rounded-md hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed">
-                    Update
-                </button>
+                    <div class="flex justify-end gap-3">
+                        <button @click="showShiftModal = false"
+                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
+                            Cancel
+                        </button>
+                        <button 
+                            @click="Shift"
+                            class="px-4 py-2 text-sm font-medium text-white bg-orange-500 rounded-md hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed">
+                            Update
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-</template>
+    </template>
                             <!-- OT status  and Hours-->
                             <template v-else-if="column.key === 'OTHourAndMin'">
                                 <span :class="[

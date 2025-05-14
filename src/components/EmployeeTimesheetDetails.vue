@@ -337,6 +337,15 @@ const handleShiftClick = async (item) => {
         const result = await userStore.fetchShiftList(LoggedInUserId.value.userId, item.startDate);
         if (result.success) {
             shiftdropdownData.value = result.data;
+
+    const currentDate = new Date();
+    const sevenDaysAgo = new Date(currentDate);
+    sevenDaysAgo.setDate(currentDate.getDate() - 7);
+
+    const defaultEndDate = currentDate.toISOString().split('T')[0];
+    const defaultStartDate = sevenDaysAgo.toISOString().split('T')[0];
+    await userStore.fetchTimesheet(null, defaultStartDate, defaultEndDate);
+
             
         } else {
             alert('Failed to load shift list: ' + result.error);

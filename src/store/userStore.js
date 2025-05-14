@@ -94,14 +94,13 @@ export const useUserStore = defineStore('user', {
     
       try {
         const response = await axios({
-          method: 'PUT',
+          method: 'POST',
           url: `${constant.endpoint}/rest/catalog-service-rest/updateTemporaryTime`,
-          params: {
-    
-            tempTimeExternalCode: tempTimeExternalCode,
+          data: {
+            externalCode: tempTimeExternalCode,
             workSchedule:workSchedule,
             startDate:startDate,
-            CREATEDBY:loggedInUserId,
+            userId:loggedInUserId,
           },
           headers: {
             'Content-Type': 'application/json'

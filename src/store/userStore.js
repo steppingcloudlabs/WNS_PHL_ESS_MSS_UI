@@ -97,10 +97,10 @@ export const useUserStore = defineStore('user', {
           method: 'POST',
           url: `${constant.endpoint}/rest/catalog-service-rest/updateTemporaryTime`,
           data: {
-    
             externalCode: tempTimeExternalCode,
             workSchedule:workSchedule,
             startDate:startDate,
+            userId:loggedInUserId,
             userId:loggedInUserId,
           },
           headers: {

@@ -321,6 +321,7 @@ const shiftdropdownData = ref([]);
 const handleShiftClick = async (item) => {
     startDate.value = item.startDate;
     tempTimeExternalCode.value = item.tempTimeExternalCode;
+    showShiftModal.value = true;
 
     const today = new Date();
     const diffTime = Math.abs(today - item.startDate);
@@ -338,7 +339,16 @@ const handleShiftClick = async (item) => {
         const result = await userStore.fetchShiftList(LoggedInUserId.value.userId, item.startDate);
         if (result.success) {
             shiftdropdownData.value = result.data;
-            showShiftModal.value = true;
+
+    const currentDate = new Date();
+    const sevenDaysAgo = new Date(currentDate);
+    sevenDaysAgo.setDate(currentDate.getDate() - 7);
+
+    const defaultEndDate = currentDate.toISOString().split('T')[0];
+    const defaultStartDate = sevenDaysAgo.toISOString().split('T')[0];
+    await userStore.fetchTimesheet(null, defaultStartDate, defaultEndDate);
+
+            
         } else {
             alert('Failed to load shift list: ' + result.error);
         }
@@ -652,7 +662,8 @@ const downloadExcel = () => {
                             </template>
 
                             <!-- shift id and popup for update -->
-<template v-if="column.key === 'ShiftId'">
+
+<template v-else-if="column.key === 'ShiftId'">
         <span @click="handleShiftClick(item)"
             class="cursor-pointer hover:text-orange-500 hover:underline">
             {{ item[column.key] || "-" }}

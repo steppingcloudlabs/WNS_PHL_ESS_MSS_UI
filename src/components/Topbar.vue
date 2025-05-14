@@ -45,8 +45,8 @@ const refreshapi = () => {
     <!-- remove in production -->
     <div
     @click="refreshapi"
-    class="border font-bold  border-black p-2 rounded-2xl hover:cursor-pointer">
-      Refresh API 🔃
+    class="border font-bold text-black italic border-black p-2 rounded-2xl hover:cursor-pointer">
+      Refresh Timesheet API 
     </div>
 
     <div class=" hover:cursor-pointer flex justify-center items-center md:gap-x-2">

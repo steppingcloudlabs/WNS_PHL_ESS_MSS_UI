@@ -7,10 +7,10 @@ export default {
 
     isLocal: true, //When running it locally.
     isDev: false,  //For dev space only, also this should be true while deploying to Dev space
-    isTest: false, // for test space only, this should be true while deploying to test space
+    isTest: true, // for test space only, this should be true while deploying to test space
     isProd: false, // for prod space only, and while deploying to the prod
 
-    version: "0.2",
-    lastBuild: "25-04-2025"
+    version: "0.3",
+    lastBuild: "12-05-2025"
  
 };

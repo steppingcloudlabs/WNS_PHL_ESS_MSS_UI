@@ -101,6 +101,7 @@ export const useUserStore = defineStore('user', {
             workSchedule:workSchedule,
             startDate:startDate,
             userId:loggedInUserId,
+            userId:loggedInUserId,
           },
           headers: {
             'Content-Type': 'application/json'

@@ -1,6 +1,7 @@
 <script setup>
 import { BookOpen } from "lucide-vue-next";
 import { RouterLink } from "vue-router";
+import constant from "../constant";
 
 defineProps({
     isOpen: {
@@ -50,15 +51,15 @@ defineProps({
             <div v-if="isOpen" class="p-4 text-xs flex flex-col gap-2">
                 <div class="flex items-center gap-1">
                     <div class="font-medium">Version:</div>
-                    <div>0.1</div>
+                    <div>{{ constant.version }}</div>
                 </div>
                 <div class="flex items-center gap-1">
                     <div class="font-medium">Last build:</div>
-                    <div>2025-04-25</div>
+                    <div>{{ constant.lastBuild }}</div>
                 </div>
             </div>
             <div v-else class="p-2 text-center text-xs">
-                <div>V: 0.1</div>
+                <div>V: {{ constant.version }}</div>
             </div>
         </div>
 

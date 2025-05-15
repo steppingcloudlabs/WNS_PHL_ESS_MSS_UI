@@ -1,5 +1,3 @@
-
-
 export default {
 
     // Variables to control the code and feature based on sapces,
@@ -12,5 +10,5 @@ export default {
 
     version: "0.3",
     lastBuild: "12-05-2025"
- 
+
 };

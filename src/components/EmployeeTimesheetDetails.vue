@@ -394,8 +394,12 @@ const handleShiftClick = async (item) => {
     }
 };
 
+
+const shiftupdateLoader = ref(null);
 // shift update function 
 const Shift = async () => {
+
+     shiftupdateLoader.value = true; 
     const res = await userStore.updateShift(
         LoggedInUserId.value.userId,
         startDate.value,
@@ -403,9 +407,14 @@ const Shift = async () => {
         tempTimeExternalCode.value
     );
 
+    
+
+
+
     console.log('Shift update response:', res);
 
     if (res.success === true) {
+        shiftupdateLoader.value = true; 
         showNotification('Shift updated successfully', 'success');
         showShiftModal.value = false;
 
@@ -680,8 +689,6 @@ const downloadExcel = () => {
 
         <!-- Table View -->
 
-
-
         <div v-else class="overflow-x-auto pb-4  py-10">
 
             <div v-if="loading" class="flex justify-center items-center mb-4">
@@ -771,6 +778,7 @@ const downloadExcel = () => {
                                 <div v-if="showShiftModal"
                                     class="fixed inset-0 bg-opacity-30 flex items-center justify-center z-50">
                                     <div class="bg-white rounded-lg p-6 w-96 shadow-xl">
+                                        
                                         <h3 class="text-lg font-semibold mb-4">Update Shift</h3>
 
                                         <div v-if="loadingShifts" class="flex justify-center items-center mb-4">
@@ -803,7 +811,19 @@ const downloadExcel = () => {
                                                     class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
                                                     Cancel
                                                 </button>
-                                                <button @click="Shift"
+
+                                                <button v-if="shiftupdateLoader"
+                                                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
+                                                    <svg class="animate-spin h-5 w-5 text-orange-500" xmlns="http://www.w3.org/2000/svg"
+                                                        fill="none" viewBox="0 0 24 24">
+                                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                                            stroke-width="4"></circle>
+                                                        <path class="opacity-75" fill="currentColor"
+                                                            d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                                                    </svg>
+                                                </button>
+
+                                                <button v-else @click="Shift"
                                                     class="px-4 py-2 text-sm font-medium text-white bg-orange-500 rounded-md hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed">
                                                     Update
                                                 </button>
@@ -843,27 +863,28 @@ const downloadExcel = () => {
                             </template>
 
                             <div v-else-if="showBreakupModal"
-                                class="fixed inset-0  bg-opacity-30 flex items-center justify-center z-50">
-                                <div class="bg-white rounded-lg p-6 w-96 shadow-xl">
+                                class="fixed inset-0    bg-opacity-30  flex items-center justify-center z-50">
+                                <div class="bg-gray-100 border-[1px] border-gray-400  rounded-lg p-6 w-96 ">
                                     <h3 class="text-lg font-semibold mb-4">Breakup Details</h3>
 
-                                    <div v-if="breakupData.length === 0" class="text-gray-500 text-sm">
+                                    <div v-if="breakupData.length === 0" class="text-gray-500 text-sm ">
                                         No breakup data available.
                                     </div>
 
-                                    <ul v-else class="space-y-2">
+                                    <ul v-else class="space-y-2 flex flex-col">
+
                                         <li v-for="(breakup, index) in breakupData" :key="index"
                                             class="flex justify-between items-center">
                                             <span class="text-sm font-medium">{{ breakup.name || "-" }}</span>
-                                            <span class="text-sm text-gray-700">{{ breakup.code || "-" }}</span>
-                                            <span class="text-sm text-gray-500">{{ breakup.hoursAndMinutes || "-"
+                                            <span class="text-sm text-gray-800">{{ breakup.hoursAndMinutes || "-"
                                                 }}</span>
                                         </li>
+                                       
                                     </ul>
 
-                                    <div class="flex justify-end mt-4">
+                                    <div class="flex justify-end mt-8">
                                         <button @click="showBreakupModal = false"
-                                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
+                                            class="px-4 py-2 bg-red-400 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
                                             Close
                                         </button>
                                     </div>

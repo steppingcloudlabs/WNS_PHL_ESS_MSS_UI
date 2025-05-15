@@ -110,7 +110,8 @@ export const useUserStore = defineStore('user', {
 
         console.log("response data: ", response);
     
-        if (response.status === 200 ) {
+        if (response.status == 200 && response.data?.result?.[0].status == 'OK') {
+          console.log("Shift updated userstore:", response.data);
           return {
             success: true,
             data: response.data,

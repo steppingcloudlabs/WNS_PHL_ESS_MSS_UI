@@ -407,14 +407,11 @@ const Shift = async () => {
         tempTimeExternalCode.value
     );
 
-    
 
+    console.log('Shift update response:', res.success);
 
-
-    console.log('Shift update response:', res);
-
-    if (res.success === true) {
-        shiftupdateLoader.value = true; 
+    if (res.success) {
+        shiftupdateLoader.value = false; 
         showNotification('Shift updated successfully', 'success');
         showShiftModal.value = false;
 
@@ -426,6 +423,7 @@ const Shift = async () => {
         userStore.fetchTimesheet(null, defaultStartDate, defaultEndDate);
 
     } else {
+        shiftupdateLoader.value = false;
         const errorMessage = res.message || 'Failed to update shift';
         showNotification(errorMessage, 'error');
         showShiftModal.value = false;

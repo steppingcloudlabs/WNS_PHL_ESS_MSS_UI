@@ -92,7 +92,7 @@ export const useUserStore = defineStore('user', {
   
       console.log("updating shift:", loggedInUserId, startDate, tempTimeExternalCode, workSchedule);
     
-      try {
+      
         const response = await axios({
           method: 'POST',
           url: `${constant.endpoint}/rest/catalog-service-rest/updateTemporaryTime`,
@@ -108,13 +108,13 @@ export const useUserStore = defineStore('user', {
           }
         });
 
-        console.log("response data: ", response);
+        console.log("response data status: ", response.data.result[0].status);
     
-        if (response.status == 200 && response.data?.result?.[0].status == 'OK') {
+        if (response.data.status == 200 && response.data?.result[0].status === 'OK') {
           console.log("Shift updated userstore:", response.data);
           return {
             success: true,
-            data: response.data,
+            // data: response.data,
             message: 'Shift updated successfully'
           };
         } else {
@@ -125,14 +125,7 @@ export const useUserStore = defineStore('user', {
           };
         }
     
-      } catch (error) {
-        console.error('Error updating shift:', error);
-        return {
-            success: false,
-            error: error.response?.data || error.message,
-            message: error.response?.data?.message || 'Failed to update shift',
-        };
-      }
+     
     
     },
 

@@ -16,15 +16,26 @@ const LoggedInUserId = computed(() => userStore.userInfo);
 console.log("loggedin USer: ", LoggedInUserId.value.userId);
 
 
+const loading = ref(null);
 // Load data when component mounts
 onMounted(async () => {
+    loading.value = true;
     const currentDate = new Date();
     const sevenDaysAgo = new Date(currentDate);
     sevenDaysAgo.setDate(currentDate.getDate() - 7);
-
     const defaultEndDate = currentDate.toISOString().split('T')[0];
     const defaultStartDate = sevenDaysAgo.toISOString().split('T')[0];
-    await userStore.fetchTimesheet(null, defaultStartDate, defaultEndDate);
+    const res = await userStore.fetchTimesheet(null, defaultStartDate, defaultEndDate);
+
+    console.log("timesheet data: ", res);
+
+    if (res) {
+        loading.value = false;
+    }
+    else {
+        showNotification('failed to get timesheet data', 'error');
+
+    }
 });
 
 
@@ -109,17 +120,23 @@ const columns = ref([
     { key: 'RegStatus', label: 'Attendence Status', visible: true },
     { key: 'attendanceType', label: 'Attendance Type', visible: true },
     { key: 'leave', label: 'Leave', visible: true },
-    { key: 'leaveStatus', label: 'Leave Status', visible: false },
+    { key: 'leaveStatus', label: 'Leave Status', visible: true },
     { key: 'Tardy', label: 'Tardy', visible: true },
     { key: 'Undertime', label: 'Undertime', visible: true },
     { key: 'TCH_Value', label: 'TCH', visible: true },
+    { key: "TCH_Status", label: "TCH Status", visible: false },
     { key: 'UCH_Value', label: 'UCH', visible: true },
+    { key: "UCH_Status", label: "UCH Status", visible: false },
     { key: 'OTHourAndMin', label: 'OT Hours', visible: true },
-    { key: 'OTStatus', label: 'OT Status', visible: false },
+    { key: 'OTStatus', label: 'OT Status', visible: true },
     { key: 'ND1', label: 'ND1', visible: true },
+    { key: "ND1_Breakup", label: "ND1 Breakup", visible: false },
     { key: 'ExcessND1', label: 'Excess ND1', visible: true },
+    { key: "ExcessND1_Breakup", label: "Exces ND1 Breakup", visible: false },
     { key: 'ND2', label: 'ND2', visible: true },
+    { key: "ND2_Breakup", label: "ND2 Breakup", visible: false },
     { key: 'ExcessND2', label: 'Excess ND2', visible: true },
+    { key: "ExcessND2_Breakup", label: "Exces ND2 Breakup", visible: false },
     { key: 'Meal', label: 'Meal', visible: true },
     { key: 'Transport', label: 'Transport', visible: true }
 
@@ -305,17 +322,33 @@ const toggleSort = (columnKey) => {
 };
 
 const showShiftModal = ref(false);
-// const loadingShifts = ref(false);
 const selectedItem = ref(null);
-
 const startDate = ref(null);
 const tempTimeExternalCode = ref('');
 const workSchedule = ref('');
+const loadingShifts = ref(false);
 
+const shiftdropdownData = ref([]);
 
-const loadingShifts = ref(false); // Add loading state for shifts
+const notification = ref({
+    message: '',
+    type: '', // 'success' or 'error'
+    visible: false,
+});
 
-const shiftdropdownData = ref([]); 
+const showNotification = (message, type) => {
+    notification.value = {
+        message,
+        type,
+        visible: true,
+    };
+
+    //  hide the notification after 3 seconds
+    setTimeout(() => {
+        notification.value.visible = false;
+    }, 3000);
+};
+
 
 // shift update 
 const handleShiftClick = async (item) => {
@@ -340,15 +373,15 @@ const handleShiftClick = async (item) => {
         if (result.success) {
             shiftdropdownData.value = result.data;
 
-    const currentDate = new Date();
-    const sevenDaysAgo = new Date(currentDate);
-    sevenDaysAgo.setDate(currentDate.getDate() - 7);
+            const currentDate = new Date();
+            const sevenDaysAgo = new Date(currentDate);
+            sevenDaysAgo.setDate(currentDate.getDate() - 7);
 
-    const defaultEndDate = currentDate.toISOString().split('T')[0];
-    const defaultStartDate = sevenDaysAgo.toISOString().split('T')[0];
-    await userStore.fetchTimesheet(null, defaultStartDate, defaultEndDate);
+            const defaultEndDate = currentDate.toISOString().split('T')[0];
+            const defaultStartDate = sevenDaysAgo.toISOString().split('T')[0];
+            await userStore.fetchTimesheet(null, defaultStartDate, defaultEndDate);
 
-            
+
         } else {
             alert('Failed to load shift list: ' + result.error);
         }
@@ -363,11 +396,40 @@ const handleShiftClick = async (item) => {
 
 // shift update function 
 const Shift = async () => {
+    const res = await userStore.updateShift(
+        LoggedInUserId.value.userId,
+        startDate.value,
+        workSchedule.value,
+        tempTimeExternalCode.value
+    );
 
+    console.log('Shift update response:', res);
 
-    userStore.updateShift(LoggedInUserId.value.userId, startDate.value, workSchedule.value , tempTimeExternalCode.value);
+    if (res.success === true) {
+        showNotification('Shift updated successfully', 'success');
+        showShiftModal.value = false;
+
+        const currentDate = new Date();
+        const sevenDaysAgo = new Date(currentDate);
+        sevenDaysAgo.setDate(currentDate.getDate() - 7);
+        const defaultEndDate = currentDate.toISOString().split('T')[0];
+        const defaultStartDate = sevenDaysAgo.toISOString().split('T')[0];
+        userStore.fetchTimesheet(null, defaultStartDate, defaultEndDate);
+
+    } else {
+        const errorMessage = res.message || 'Failed to update shift';
+        showNotification(errorMessage, 'error');
+        showShiftModal.value = false;
+    }
 };
 
+const showBreakupModal = ref(false);
+const breakupData = ref([]); // This will hold the array of objects for the breakup
+const handleBreakupClick = (breakupArray) => {
+    breakupData.value = breakupArray || []; // Set the breakup data
+    showBreakupModal.value = true; // Show the modal
+};
+// download Excel
 const downloadExcel = () => {
     const headers = visibleColumns.value.map(col => col.label);
     const data = filteredTimesheetData.value.map(item => {
@@ -410,15 +472,18 @@ const downloadExcel = () => {
 
 <template>
 
-    <div v-if="loading" class="flex items-center justify-center min-h-[400px]">
-        <div class="flex flex-col items-center gap-4">
-            <div class="animate-spin rounded-full h-12 w-12 border-4 border-orange-500 border-t-transparent"> </div>
-            <span class="text-gray-600">Loading timesheet data... </span>
-        </div>
-    </div>
+
 
     <div :class="{ ' fixed inset-0 z-50 bg-white overflow-auto': isFullscreen }" class="shadow-md rounded-lg mx-auto">
         <div class="md:w-full p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+
+            <!-- Notification -->
+            <div v-if="notification.visible" :class="[
+                'fixed z-[99999] top-10 right-10 px-4 py-2 rounded shadow-lg text-white',
+                notification.type === 'success' ? 'bg-green-500' : 'bg-red-500'
+            ]">
+                {{ notification.message }}
+            </div>
 
             <div class="text-lg font-semibold">
                 Employee Timesheet Details
@@ -614,8 +679,20 @@ const downloadExcel = () => {
         </div>
 
         <!-- Table View -->
-        <div v-else class="overflow-x-auto pb-4">
-            <table class="table-auto min-w-full divide-y  divide-gray-200">
+
+
+
+        <div v-else class="overflow-x-auto pb-4  py-10">
+
+            <div v-if="loading" class="flex justify-center items-center mb-4">
+                <div class="flex flex-col items-center">
+                    <div class="animate-spin rounded-full h-10 w-10 border-4 border-orange-500 border-t-transparent">
+                    </div>
+                    <div class=" text-lg font-medium">loading timesheet...</div>
+                </div>
+            </div>
+
+            <table v-if="!loading" class="table-auto min-w-full divide-y  divide-gray-200">
                 <thead class="bg-gray-50 sticky top-0 z-10">
                     <tr>
                         <th v-for="column in visibleColumns" :key="column.key"
@@ -644,6 +721,7 @@ const downloadExcel = () => {
                             class="px-3 py-3 text-xs whitespace-nowrap " :class="{
                                 'text-center': ['srNo', 'nd1', 'nd2', 'meal', 'transport'].includes(column.key)
                             }">
+                            <!-- attendence Status -->
                             <template v-if="column.key === 'RegStatus'">
                                 <span :class="[
                                     'px-2 py-1 text-center text-xs font-medium inline-block',
@@ -660,86 +738,162 @@ const downloadExcel = () => {
                                     {{ item[column.key] || "-" }}
                                 </span>
                             </template>
-
-                            <!-- shift id and popup for update -->
-
-<template v-else-if="column.key === 'ShiftId'">
-        <span @click="handleShiftClick(item)"
-            class="cursor-pointer hover:text-orange-500 hover:underline">
-            {{ item[column.key] || "-" }}
-        </span>
-        <div v-if="showShiftModal"
-            class="fixed inset-0 bg-opacity-30 flex items-center justify-center z-50">
-            <div class="bg-white rounded-lg p-6 w-96 shadow-xl">
-                <h3 class="text-lg font-semibold mb-4">Update Shift</h3>
-
-                <div v-if="loadingShifts" class="flex justify-center items-center mb-4">
-                    <svg class="animate-spin h-6 w-6 text-orange-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-                    </svg>
-                </div>
-
-                <div v-else>
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            Select New Shift
-                        </label>
-                        <select 
-                            v-model="workSchedule"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                        >
-                            <option value="">Select a shift</option>
-                            <option 
-                                v-for="shift in shiftdropdownData" 
-                                :key="shift.externalCode"
-                                :value="shift.SHIFTCODE"
-                            >
-                                {{ shift.SHIFTCODE + "  " }} ({{ shift.externalCode }})
-                            </option>
-                        </select>
-                    </div>
-
-                    <div class="flex justify-end gap-3">
-                        <button @click="showShiftModal = false"
-                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
-                            Cancel
-                        </button>
-                        <button 
-                            @click="Shift"
-                            class="px-4 py-2 text-sm font-medium text-white bg-orange-500 rounded-md hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed">
-                            Update
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </template>
-                            <!-- OT status  and Hours-->
-                            <template v-else-if="column.key === 'OTHourAndMin'">
+                            <!-- UCH value and status -->
+                            <template v-else-if="column.key === 'UCH_Value'">
                                 <span :class="[
                                     'px-2 py-1 rounded text-xs font-medium inline-block',
-                                    item.OTStatus === 'APPROVED' || item.OTStatus === 'Approved' ? 'bg-green-100 text-green-800' : '',
-                                    item.OTStatus === 'PENDING_APPROVAL' ? 'bg-orange-100 text-orange-800' : '',
-                                    item.OTStatus === 'REJECTED' || item.OTStatus === 'Rejected' ? 'bg-red-100 text-red-800' : ''
+                                    item.UCH_Status === 'APPROVED' || item.UCH_Status === 'Approved' ? 'bg-green-100 text-green-800' : '',
+                                    item.UCH_Status === 'PENDING_APPROVAL' ? 'bg-orange-100 text-orange-800' : '',
+                                    item.UCH_Status === 'REJECTED' || item.UCH_Status === 'Rejected' ? 'bg-red-100 text-red-800' : ''
                                 ]">
                                     {{ item[column.key] || "-" }}
                                 </span>
                             </template>
+
+                            <!-- TCH value and Status -->
+                            <template v-else-if="column.key === 'TCH_Value'">
+                                <span :class="[
+                                    'px-2 py-1 rounded text-xs font-medium inline-block',
+                                    item.TCH_Status === 'APPROVED' || item.TCH_Status === 'Approved' ? 'bg-green-100 text-green-800' : '',
+                                    item.TCH_Status === 'PENDING_APPROVAL' ? 'bg-orange-100 text-orange-800' : '',
+                                    item.TCH_Status === 'REJECTED' || item.TCH_Status === 'Rejected' ? 'bg-red-100 text-red-800' : ''
+                                ]">
+                                    {{ item[column.key] || "-" }}
+                                </span>
+                            </template>
+
+                            <!-- shift id and popup for update -->
+                            <template v-else-if="column.key === 'ShiftId'">
+                                <span @click="handleShiftClick(item)"
+                                    class="cursor-pointer hover:text-orange-500 hover:underline">
+                                    {{ item[column.key] || "-" }}
+                                </span>
+                                <div v-if="showShiftModal"
+                                    class="fixed inset-0 bg-opacity-30 flex items-center justify-center z-50">
+                                    <div class="bg-white rounded-lg p-6 w-96 shadow-xl">
+                                        <h3 class="text-lg font-semibold mb-4">Update Shift</h3>
+
+                                        <div v-if="loadingShifts" class="flex justify-center items-center mb-4">
+                                            <svg class="animate-spin h-6 w-6 text-orange-500"
+                                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                                    stroke-width="4"></circle>
+                                                <path class="opacity-75" fill="currentColor"
+                                                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                                            </svg>
+                                        </div>
+
+                                        <div v-else>
+                                            <div class="mb-4">
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                                    Select New Shift
+                                                </label>
+                                                <select v-model="workSchedule"
+                                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                                                    <option value="">Select a shift</option>
+                                                    <option v-for="shift in shiftdropdownData" :key="shift.externalCode"
+                                                        :value="shift.SHIFTCODE">
+                                                        {{ shift.SHIFTCODE + " " }} ({{ shift.externalCode }})
+                                                    </option>
+                                                </select>
+                                            </div>
+
+                                            <div class="flex justify-end gap-3">
+                                                <button @click="showShiftModal = false"
+                                                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
+                                                    Cancel
+                                                </button>
+                                                <button @click="Shift"
+                                                    class="px-4 py-2 text-sm font-medium text-white bg-orange-500 rounded-md hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed">
+                                                    Update
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                            <!-- OT status  and Hours-->
+                            <template v-else-if="column.key === 'OTHourAndMin'">
+                                <span :class="[
+                                    'px-2 py-1 rounded text-xs font-medium inline-block',
+                                    item.OTStatus === 'APPROVED' || item.OTStatus === 'Approved' ? ' text-green-800' : '',
+                                    item.OTStatus === 'PENDING_APPROVAL' ? 'text-orange-800' : '',
+                                    item.OTStatus === 'REJECTED' || item.OTStatus === 'Rejected' ? ' text-red-800' : ''
+                                ]">
+                                    {{ item[column.key] || "-" }}
+                                </span>
+                            </template>
+                            <template v-else-if="column.key === 'OTStatus'">
+                                <span :class="[
+                                    'px-2 py-1 rounded text-xs font-medium inline-block',
+                                    item[column.key] === 'APPROVED' || item[column.key] === 'Approved' ? 'bg-green-100 text-green-800' : '',
+                                    item[column.key] === 'PENDING_APPROVAL' ? 'bg-orange-100 text-orange-800' : '',
+                                    item[column.key] === 'REJECTED' || item[column.key] === 'Rejected' ? 'bg-red-100 text-red-800' : ''
+                                ]">
+                                    {{ item[column.key] || "-" }}
+                                </span>
+                            </template>
+
+                            <!-- ND1, ND2, ExcessND1, ExcessND2 -->
+                            <template v-else-if="['ND1', 'ND2', 'ExcessND1', 'ExcessND2'].includes(column.key)">
+                                <span @click="handleBreakupClick(item[`${column.key}_Breakup`])"
+                                    class="cursor-pointer text-orange-500 hover:underline">
+                                    {{ item[column.key] || "-" }}
+                                </span>
+                            </template>
+
+                            <div v-else-if="showBreakupModal"
+                                class="fixed inset-0  bg-opacity-30 flex items-center justify-center z-50">
+                                <div class="bg-white rounded-lg p-6 w-96 shadow-xl">
+                                    <h3 class="text-lg font-semibold mb-4">Breakup Details</h3>
+
+                                    <div v-if="breakupData.length === 0" class="text-gray-500 text-sm">
+                                        No breakup data available.
+                                    </div>
+
+                                    <ul v-else class="space-y-2">
+                                        <li v-for="(breakup, index) in breakupData" :key="index"
+                                            class="flex justify-between items-center">
+                                            <span class="text-sm font-medium">{{ breakup.name || "-" }}</span>
+                                            <span class="text-sm text-gray-700">{{ breakup.code || "-" }}</span>
+                                            <span class="text-sm text-gray-500">{{ breakup.hoursAndMinutes || "-"
+                                                }}</span>
+                                        </li>
+                                    </ul>
+
+                                    <div class="flex justify-end mt-4">
+                                        <button @click="showBreakupModal = false"
+                                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
+                                            Close
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
 
                             <!-- leave || status -->
                             <template v-else-if="column.key === 'leave'">
                                 <span :class="[
                                     'px-2 py-1 rounded text-xs font-medium inline-block',
-                                    item?.leaveStatus === 'APPROVED' || item?.leaveStatus === 'Approved' ? 'bg-green-100 text-green-800' : '',
-                                    item?.leaveStatus === 'PENDING' || item?.leaveStatus === 'Pending' ? 'bg-orange-100 text-orange-800' : '',
-                                    item?.leaveStatus === 'REJECTED' || item?.leaveStatus === 'Rejected' ? 'bg-red-100 text-red-800' : ''
+                                    item.leaveStatus === 'APPROVED' || item.leaveStatus === 'Approved' ? 'text-green-800' : '',
+                                    item.leaveStatus === 'PENDING' || item.leaveStatus === 'Pending' ? 'text-orange-800' : '',
+                                    item.leaveStatus === 'REJECTED' || item.leaveStatus === 'Rejected' ? 'text-red-800' : ''
                                 ]">
                                     {{ item[column.key] || "-" }}
                                 </span>
                             </template>
 
+                            <template v-else-if="column.key === 'leaveStatus'">
+                                <span :class="[
+                                    'px-2 py-1 rounded text-xs font-medium inline-block',
+                                    item[column.key] === 'APPROVED' || item[column.key] === 'Approved' ? 'bg-green-100 text-green-800' : '',
+                                    item[column.key] === 'PENDING' || item[column.key] === 'Pending' ? 'bg-orange-100 text-orange-800' : '',
+                                    item[column.key] === 'REJECTED' || item[column.key] === 'Rejected' ? 'bg-red-100 text-red-800' : ''
+                                ]">
+                                    {{ item[column.key] || "-" }}
+                                </span>
+                            </template>
 
+                            <!-- meal and trasnport -->
                             <template v-else-if="column.key === 'Meal' || column.key === 'Transport'">
                                 <span :class="[
                                     'px-2 py-1 rounded text-xs font-medium inline-block',
@@ -762,8 +916,6 @@ const downloadExcel = () => {
                             <template v-else-if="column.key === 'inTime' || column.key === 'outTime'">
                                 {{ formatISODuration(item[column.key] || "-") }}
                             </template>
-
-
 
                             <template class="" v-else>
                                 {{ item[column.key] || "-" }}

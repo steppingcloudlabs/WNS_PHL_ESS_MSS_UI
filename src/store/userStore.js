@@ -101,14 +101,16 @@ export const useUserStore = defineStore('user', {
             workSchedule:workSchedule,
             startDate:startDate,
             userId:loggedInUserId,
-            userId:loggedInUserId,
+            
           },
           headers: {
             'Content-Type': 'application/json'
           }
         });
+
+        console.log("response data: ", response);
     
-        if (response.status === 200) {
+        if (response.status === 200 ) {
           return {
             success: true,
             data: response.data,
@@ -116,18 +118,18 @@ export const useUserStore = defineStore('user', {
           };
         } else {
           return {
-            success: false,
-            error: 'Failed to update shift',
-            message: response.data?.message || 'Unknown error occurred'
+                success: false,
+                error: response.data?.result?.[0]?.message || 'Failed to update shift',
+                message: response.data?.result?.[0]?.message || 'Unknown error occurred',
           };
         }
     
       } catch (error) {
         console.error('Error updating shift:', error);
         return {
-          success: false,
-          error: error.response?.data || error.message,
-          message: error.response?.data?.message || 'Failed to update shift'
+            success: false,
+            error: error.response?.data || error.message,
+            message: error.response?.data?.message || 'Failed to update shift',
         };
       }
     

@@ -1,4 +1,5 @@
 <script setup>
+import moment from 'moment';
 import * as XLSX from 'xlsx';
 import { Download, Expand, ListTree, ToggleLeft, ChevronDown, Trash, ChevronUp, Check, Pencil, Search, Edit } from 'lucide-vue-next';
 import { ref, computed, onMounted, onUnmounted, watch, } from 'vue';
@@ -20,21 +21,18 @@ const loading = ref(null);
 // Load data when component mounts
 onMounted(async () => {
     loading.value = true;
-    const currentDate = new Date();
-    const sevenDaysAgo = new Date(currentDate);
-    sevenDaysAgo.setDate(currentDate.getDate() - 7);
-    const defaultEndDate = currentDate.toISOString().split('T')[0];
-    const defaultStartDate = sevenDaysAgo.toISOString().split('T')[0];
-    const res = await userStore.fetchTimesheet(null, defaultStartDate, defaultEndDate);
 
-    console.log("timesheet data: ", res);
+    // Get previous month range using moment
+  const startOfPrevMonth = moment().subtract(1, 'months').startOf('month').format('YYYY-MM-DD');
+    const endOfPrevMonth = moment().subtract(1, 'months').endOf('month').format('YYYY-MM-DD');
+    const res = await userStore.fetchTimesheet(null, startOfPrevMonth, endOfPrevMonth);
+
+    // console.log("timesheet data: ", res);
 
     if (res) {
         loading.value = false;
-    }
-    else {
+    } else {
         showNotification('failed to get timesheet data', 'error');
-
     }
 });
 
@@ -558,7 +556,7 @@ const downloadExcel = () => {
                         class="rounded-md border-gray-300 text-sm focus:ring-orange-500">
                         <option value="">All</option>
                         <option value="approved">Approved</option>
-                        <option value="pending">Pending</option>
+                        <option value="PENDING_APPROVAL">Pending</option>
                         <option value="rejected">Rejected</option>
                     </select>
                 </div>
@@ -629,7 +627,7 @@ const downloadExcel = () => {
                             <span :class="[
                                 'px-2 py-1 rounded-full text-xs font-medium inline-block',
                                 row[column.key] === 'APPROVED' ? 'bg-green-100 text-green-800' : '',
-                                row[column.key] === 'PENDING' ? 'bg-yellow-100 text-yellow-800' : '',
+                                row[column.key] === 'PENDING_APPROVAL' ? 'bg-yellow-100 text-yellow-800' : '',
                                 row[column.key] === 'REJECTED' ? 'bg-red-100 text-red-800' : ''
                             ]">
                                 {{ getRegStatus(row) }}
@@ -733,7 +731,7 @@ const downloadExcel = () => {
                                 <span :class="[
                                     'px-2 py-1 text-center text-xs font-medium inline-block',
                                     getRegStatus(item) === 'APPROVED' ? 'bg-green-100 text-green-800' : '',
-                                    getRegStatus(item) === 'Pending' ? 'bg-yellow-100 text-yellow-800' : '',
+                                    getRegStatus(item) === 'PENDING_APPROVAL' ? 'bg-yellow-100 text-yellow-800' : '',
                                     getRegStatus(item) === 'Rejected' ? 'bg-red-100 text-red-800' : ''
                                 ]">
                                     {{ getRegStatus(item) }}

@@ -1,4 +1,5 @@
 <script setup>
+import moment from 'moment';
 import { Minus, Plus, RefreshCw, Search } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 import EmployeeTimesheetDetails from './EmployeeTimesheetDetails.vue';
@@ -19,20 +20,21 @@ const currentDate = new Date();
 const sevenDaysAgo = new Date(currentDate);
 sevenDaysAgo.setDate(currentDate.getDate() - 7);
 
-const defaultEndDate = currentDate.toISOString().split('T')[0];
-const defaultStartDate = sevenDaysAgo.toISOString().split('T')[0];
+const startOfPrevMonth = moment().subtract(1, 'months').startOf('month').format('YYYY-MM-DD');
+const endOfPrevMonth = moment().subtract(1, 'months').endOf('month').format('YYYY-MM-DD');
 
-const fd = ref(defaultStartDate);
-const td = ref(defaultEndDate);
+const fd = ref(startOfPrevMonth);
+const td = ref(endOfPrevMonth);
 const fromDate = ref('');
 const toDate = ref('');
 
 const reserDateFilter = async () => {
+   
     loading.value = true;
     try {
-        await userStore.fetchTimesheet(null, defaultStartDate, defaultEndDate);
-        fd.value = defaultStartDate;
-        td.value = defaultEndDate;
+        await userStore.fetchTimesheet(null, startOfPrevMonth, endOfPrevMonth);
+        fd.value = startOfPrevMonth;
+        td.value = endOfPrevMonth;
         fromDate.value = "";
         toDate.value = "";
         sqe.value = null;
@@ -52,10 +54,17 @@ const dateSearch = async () => {
         return;
     }
 
-    const start = new Date(fromDate.value);
-    const end = new Date(toDate.value);
-    const diffTime = Math.abs(end - start);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+    // Always set start to Monday and end to Sunday of the selected weeks
+    let start = moment(fromDate.value, 'YYYY-MM-DD').startOf('week').add(1, 'days'); // Monday
+    let end = moment(toDate.value, 'YYYY-MM-DD').endOf('week').add(1, 'days'); // Sunday
+
+    // Adjust for moment's week starting on Sunday
+    fromDate.value = start.format('YYYY-MM-DD');
+    fd.value = fromDate.value;
+    toDate.value = end.format('YYYY-MM-DD');
+    td.value = toDate.value;
+
+    const diffDays = end.diff(start, 'days') + 1;
 
     if (diffDays < 7 || diffDays > 30) {
         alert('Please select a date range between 7 and 30 days');

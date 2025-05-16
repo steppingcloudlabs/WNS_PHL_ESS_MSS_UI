@@ -138,7 +138,9 @@ const columns = ref([
     { key: 'ExcessND2', label: 'Excess ND2', visible: true },
     { key: "ExcessND2_Breakup", label: "Exces ND2 Breakup", visible: false },
     { key: 'Meal', label: 'Meal', visible: true },
-    { key: 'Transport', label: 'Transport', visible: true }
+    { key: 'Transport', label: 'Transport', visible: true },
+    { key: 'ActualInTime', label: 'Swipe In', visible: true },
+    { key: 'ActualOutTime', label: 'Swipe Out', visible: true },
 
 ]);
 

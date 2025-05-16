@@ -8,7 +8,7 @@ export default {
     isTest: true, // for test space only, this should be true while deploying to test space
     isProd: false, // for prod space only, and while deploying to the prod
 
-    version: "0.3",
-    lastBuild: "12-05-2025"
+    version: "0.5",
+    lastBuild: "15-05-2025"
 
 };

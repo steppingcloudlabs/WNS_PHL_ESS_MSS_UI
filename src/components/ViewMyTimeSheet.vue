@@ -20,8 +20,8 @@ const currentDate = new Date();
 const sevenDaysAgo = new Date(currentDate);
 sevenDaysAgo.setDate(currentDate.getDate() - 7);
 
-const startOfPrevMonth = moment().subtract(1, 'months').startOf('month').format('YYYY-MM-DD');
-const endOfPrevMonth = moment().subtract(1, 'months').endOf('month').format('YYYY-MM-DD');
+const startOfPrevMonth = moment().startOf('month').format('YYYY-MM-DD');
+const endOfPrevMonth =moment().format('YYYY-MM-DD'); // today
 
 const fd = ref(startOfPrevMonth);
 const td = ref(endOfPrevMonth);
@@ -45,6 +45,23 @@ const reserDateFilter = async () => {
     }
 };
 
+
+function onStartDateChange(e) {
+    const val = e.target.value;
+    if (moment(val, 'YYYY-MM-DD').day() !== 0) {
+        alert('Start date must be a Sunday');
+        fd.value = startOfPrevMonth;
+    }
+}
+
+function onEndDateChange(e) {
+    const val = e.target.value;
+    if (moment(val, 'YYYY-MM-DD').day() !== 6) {
+        alert('End date must be a Saturday');
+        td.value = endOfPrevMonth;
+    }
+}
+
 const dateSearch = async () => {
     fromDate.value = fd.value;
     toDate.value = td.value;
@@ -54,9 +71,21 @@ const dateSearch = async () => {
         return;
     }
 
+    // Validation: Start date must be Sunday (0), End date must be Saturday (6)
+    const startDay = moment(fromDate.value, 'YYYY-MM-DD').day();
+    const endDay = moment(toDate.value, 'YYYY-MM-DD').day();
+    if (startDay !== 0) {
+        alert('Start date must be a Sunday');
+        return;
+    }
+    if (endDay !== 6) {
+        alert('End date must be a Saturday');
+        return;
+    }
+
     // Always set start to Monday and end to Sunday of the selected weeks
-    let start = moment(fromDate.value, 'YYYY-MM-DD').startOf('week').add(1, 'days'); // Monday
-    let end = moment(toDate.value, 'YYYY-MM-DD').endOf('week').add(1, 'days'); // Sunday
+    let start = moment(fromDate.value, 'YYYY-MM-DD').startOf('week') 
+    let end = moment(toDate.value, 'YYYY-MM-DD').endOf('week')
 
     // Adjust for moment's week starting on Sunday
     fromDate.value = start.format('YYYY-MM-DD');
@@ -66,7 +95,7 @@ const dateSearch = async () => {
 
     const diffDays = end.diff(start, 'days') + 1;
 
-    if (diffDays < 7 || diffDays > 30) {
+    if (diffDays < 7 || diffDays > 31) {
         alert('Please select a date range between 7 and 30 days');
         return;
     }
@@ -91,7 +120,6 @@ const dateSearch = async () => {
         loading.value = false;
     }
 };
-
 const filteredReportees = computed(() => {
     if (!sqe.value) return userStore.reportees;
     return userStore.reportees.filter(reportee =>
@@ -184,28 +212,30 @@ const manager = computed(() => userStore.getisManager);
                 </div>
 
                 <div v-show="toggleFilter" class="flex flex-col md:flex-row gap-4 font-semibold">
-                    <div class="flex-1 min-w-0">
-                        <label class="block mb-2 text-gray-700">From Date</label>
-                        <input type="date" v-model="fd"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent">
-                    </div>
+        <div class="flex-1 min-w-0">
+            <label class="block mb-2 text-gray-700">From Date</label>
+            <input type="date" v-model="fd"
+                @change="onStartDateChange"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent">
+        </div>
 
-                    <div class="flex-1 min-w-0">
-                        <label class="block mb-2 text-gray-700">To Date</label>
-                        <div class="flex items-center gap-x-2">
-                            <input type="date" v-model="td"
-                                class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent">
-                            <button @click="dateSearch"
-                                class="p-2 hover:bg-amber-600 bg-amber-500 text-white rounded-md transition-colors">
-                                <Search class="w-5 h-5" />
-                            </button>
-                            <button @click="reserDateFilter"
-                                class="p-2 hover:bg-gray-100 rounded-md transition-colors">
-                                <RefreshCw class="w-5 h-5" />
-                            </button>
-                        </div>
-                    </div>
-                </div>
+        <div class="flex-1 min-w-0">
+            <label class="block mb-2 text-gray-700">To Date</label>
+            <div class="flex items-center gap-x-2">
+                <input type="date" v-model="td"
+                    @change="onEndDateChange"
+                    class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent">
+                <button @click="dateSearch"
+                    class="p-2 hover:bg-amber-600 bg-amber-500 text-white rounded-md transition-colors">
+                    <Search class="w-5 h-5" />
+                </button>
+                <button @click="reserDateFilter"
+                    class="p-2 hover:bg-gray-100 rounded-md transition-colors">
+                    <RefreshCw class="w-5 h-5" />
+                </button>
+            </div>
+        </div>
+    </div>
             </div>
 
             <div class="mt-6 w-full">

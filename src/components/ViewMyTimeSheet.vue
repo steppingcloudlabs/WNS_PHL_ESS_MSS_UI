@@ -1,5 +1,8 @@
 <script setup>
 import moment from 'moment';
+import FlatPickr from 'vue-flatpickr-component';
+import 'flatpickr/dist/flatpickr.css';
+import 'vue-cal/dist/vuecal.css';
 import { Minus, Plus, RefreshCw, Search } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 import EmployeeTimesheetDetails from './EmployeeTimesheetDetails.vue';
@@ -21,20 +24,27 @@ const sevenDaysAgo = new Date(currentDate);
 sevenDaysAgo.setDate(currentDate.getDate() - 7);
 
 const startOfPrevMonth = moment().startOf('month').format('YYYY-MM-DD');
-const endOfPrevMonth =moment().format('YYYY-MM-DD'); // today
+const endOfPrevMonth = moment().format('YYYY-MM-DD');
 
 const fd = ref(startOfPrevMonth);
 const td = ref(endOfPrevMonth);
+
+    
 const fromDate = ref('');
 const toDate = ref('');
 
+console.log("fd, td: ", fd.value, td.value)
+
 const reserDateFilter = async () => {
+     const startDay = moment(fromDate.value, 'YYYY-MM-DD').day();
+    const endDay = moment(toDate.value, 'YYYY-MM-DD').day();
+        fd.value = startDay
+        td.value = endDay
+        loading.value = true;
    
-    loading.value = true;
     try {
         await userStore.fetchTimesheet(null, startOfPrevMonth, endOfPrevMonth);
-        fd.value = startOfPrevMonth;
-        td.value = endOfPrevMonth;
+        
         fromDate.value = "";
         toDate.value = "";
         sqe.value = null;
@@ -45,24 +55,26 @@ const reserDateFilter = async () => {
     }
 };
 
-
-function onStartDateChange(e) {
-    const val = e.target.value;
-    if (moment(val, 'YYYY-MM-DD').day() !== 0) {
-        alert('Start date must be a Sunday');
-        fd.value = startOfPrevMonth;
-    }
+const fromDateConfig = {
+    dateFormat: 'Y-m-d',
+    enable: [
+        function (date) {
+            return date.getDay() === 0 // only Sundays
+        },
+    ],
 }
 
-function onEndDateChange(e) {
-    const val = e.target.value;
-    if (moment(val, 'YYYY-MM-DD').day() !== 6) {
-        alert('End date must be a Saturday');
-        td.value = endOfPrevMonth;
-    }
+const toDateConfig = {
+    dateFormat: 'Y-m-d',
+    enable: [
+        function (date) {
+            return date.getDay() === 6 // only Saturdays
+        },
+    ],
 }
 
 const dateSearch = async () => {
+
     fromDate.value = fd.value;
     toDate.value = td.value;
 
@@ -74,6 +86,7 @@ const dateSearch = async () => {
     // Validation: Start date must be Sunday (0), End date must be Saturday (6)
     const startDay = moment(fromDate.value, 'YYYY-MM-DD').day();
     const endDay = moment(toDate.value, 'YYYY-MM-DD').day();
+
     if (startDay !== 0) {
         alert('Start date must be a Sunday');
         return;
@@ -84,7 +97,7 @@ const dateSearch = async () => {
     }
 
     // Always set start to Monday and end to Sunday of the selected weeks
-    let start = moment(fromDate.value, 'YYYY-MM-DD').startOf('week') 
+    let start = moment(fromDate.value, 'YYYY-MM-DD').startOf('week')
     let end = moment(toDate.value, 'YYYY-MM-DD').endOf('week')
 
     // Adjust for moment's week starting on Sunday
@@ -120,6 +133,7 @@ const dateSearch = async () => {
         loading.value = false;
     }
 };
+
 const filteredReportees = computed(() => {
     if (!sqe.value) return userStore.reportees;
     return userStore.reportees.filter(reportee =>
@@ -160,29 +174,24 @@ const manager = computed(() => userStore.getisManager);
             <div class="flex-1 min-w-0 my-4" v-if="manager">
                 <label class="block mb-2 text-gray-700">Employee Name / ID *</label>
                 <div class="flex flex-wrap gap-2 mb-2">
-                    <div v-for="employee in selectedEmployees"
-                        :key="employee.userId"
+                    <div v-for="employee in selectedEmployees" :key="employee.userId"
                         class="flex items-center gap-1 px-2 py-1 bg-amber-100 rounded-md">
                         <span class="text-sm">({{ employee.userId }}) {{ employee.defaultFullName }}</span>
-                        <button @click="removeEmployee(employee.userId)" class="text-gray-500 hover:text-red-500">×</button>
+                        <button @click="removeEmployee(employee.userId)"
+                            class="text-gray-500 hover:text-red-500">×</button>
                     </div>
                 </div>
 
                 <div class="flex flex-row items-center">
                     <div class="relative w-[300px]">
-                        <input type="text"
-                            placeholder="Search Employee Name / ID"
-                            v-model="searchInput"
-                            @focus="showDropdown = true"
-                            @blur="setTimeout(() => showDropdown = false, 200)"
+                        <input type="text" placeholder="Search Employee Name / ID" v-model="searchInput"
+                            @focus="showDropdown = true" @blur="setTimeout(() => showDropdown = false, 200)"
                             class="w-full px-3 py-2 border-2 border-amber-600 rounded-md focus:outline-none">
 
                         <div v-if="showDropdown && filteredReportees.length > 0"
                             class="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                            <div v-for="reportee in filteredReportees"
-                                :key="reportee.UserId"
-                                @click="selectReportee(reportee)"
-                                class="px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                            <div v-for="reportee in filteredReportees" :key="reportee.UserId"
+                                @click="selectReportee(reportee)" class="px-4 py-2 hover:bg-gray-100 cursor-pointer">
                                 <span>({{ reportee.userId }}) {{ reportee.defaultFullName }}</span>
                             </div>
                         </div>
@@ -204,6 +213,7 @@ const manager = computed(() => userStore.getisManager);
 
             <!-- FILTER SECTION -->
             <div class="mt-6 flex flex-col gap-y-4 text-sm p-4 rounded-xl border border-gray-300 shadow-sm bg-white">
+
                 <div class="flex justify-between items-center">
                     <div class="font-medium">FILTER</div>
                     <button @click="handleToggleFilter" class="hover:bg-gray-100 p-1 rounded-full transition-colors">
@@ -212,30 +222,34 @@ const manager = computed(() => userStore.getisManager);
                 </div>
 
                 <div v-show="toggleFilter" class="flex flex-col md:flex-row gap-4 font-semibold">
-        <div class="flex-1 min-w-0">
-            <label class="block mb-2 text-gray-700">From Date</label>
-            <input type="date" v-model="fd"
-                @change="onStartDateChange"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent">
-        </div>
 
-        <div class="flex-1 min-w-0">
-            <label class="block mb-2 text-gray-700">To Date</label>
-            <div class="flex items-center gap-x-2">
-                <input type="date" v-model="td"
-                    @change="onEndDateChange"
-                    class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent">
-                <button @click="dateSearch"
-                    class="p-2 hover:bg-amber-600 bg-amber-500 text-white rounded-md transition-colors">
-                    <Search class="w-5 h-5" />
-                </button>
-                <button @click="reserDateFilter"
-                    class="p-2 hover:bg-gray-100 rounded-md transition-colors">
-                    <RefreshCw class="w-5 h-5" />
-                </button>
-            </div>
-        </div>
-    </div>
+                    <div class="flex-1 min-w-0 ">
+                        <label class="block mb-2 text-gray-700">from Date</label>
+
+                        <flat-pickr v-model="fd" :config="fromDateConfig" placeholder="from date"
+                            class="input border border-gray-300 rounded-md p-1" />
+
+                    </div>
+
+                    <div class="flex-1 min-w-0">
+                        <label class="block mb-2 text-gray-700">to Date</label>
+                        <div class="flex items-center gap-x-2">
+
+                            <flat-pickr v-model="td" :config="toDateConfig" placeholder="to date"
+                                class="input border border-gray-300 rounded-md p-1"/>
+
+                            <button @click="dateSearch"
+                                class="p-2 hover:bg-amber-600 bg-amber-500 text-white rounded-md transition-colors">
+                                <Search class="w-5 h-5"/>
+                            </button>
+
+                            <button @click="reserDateFilter" class="p-2 hover:bg-gray-100 rounded-md transition-colors">
+                                <RefreshCw class="w-5 h-5"/>
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
             </div>
 
             <div class="mt-6 w-full">

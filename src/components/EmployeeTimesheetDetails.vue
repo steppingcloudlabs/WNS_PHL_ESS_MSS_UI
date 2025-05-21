@@ -96,7 +96,7 @@ const filteredTimesheetData = computed(() => {
 });
 
 const getRegStatus = (item) => {
-    if (item.attendanceType === 'WEXTSWIPE') {
+    if (item.attendanceTypeCode === 'WEXTSWIPE') {
         return 'APPROVED';
     }
 
@@ -116,6 +116,7 @@ const columns = ref([
     { key: 'inTime', label: 'In Time', visible: true },
     { key: 'outTime', label: 'Out Time', visible: true },
     { key: 'RegStatus', label: 'Attendence Status', visible: true },
+    {key:"attendanceTypeCode", label:"attendance Code" , visible:false},
     { key: 'attendanceType', label: 'Attendance Type', visible: true },
     { key: 'leave', label: 'Leave', visible: true },
     { key: 'leaveStatus', label: 'Leave Status', visible: true },

@@ -107,7 +107,7 @@ const getRegStatus = (item) => {
 };
 
 
-// COLUMS CONTROLS
+// -------------------------------COLUMS CONTROLS
 const columns = ref([
     // { key: 'srNo', label: 'Sr.No', visible: true },
     { key: 'userId', label: 'User ID', visible: true },
@@ -116,17 +116,20 @@ const columns = ref([
     { key: 'inTime', label: 'In Time', visible: true },
     { key: 'outTime', label: 'Out Time', visible: true },
     { key: 'RegStatus', label: 'Attendence Status', visible: true },
-    {key:"attendanceTypeCode", label:"attendance Code" , visible:false},
+    { key: "attendanceTypeCode", label:"attendance Code" , visible:false},
     { key: 'attendanceType', label: 'Attendance Type', visible: true },
     { key: 'leave', label: 'Leave', visible: true },
     { key: 'leaveStatus', label: 'Leave Status', visible: true },
     { key: 'Tardy', label: 'Tardy', visible: true },
     { key: 'Undertime', label: 'Undertime', visible: true },
     { key: 'TCH_Value', label: 'TCH', visible: true },
+    { key: 'TCH_Value_Breakup', label: 'TCH Breakup', visible: false },
     { key: "TCH_Status", label: "TCH Status", visible: false },
     { key: 'UCH_Value', label: 'UCH', visible: true },
+    { key: 'UCH_Value_Breakup', label: 'UCH Breakup', visible: false},
     { key: "UCH_Status", label: "UCH Status", visible: false },
     { key: 'OTHourAndMin', label: 'OT Hours', visible: true },
+    { key: 'OTHourAndMin_Breakup', label: 'OT Hours _Breakup', visible: false },
     { key: 'OTStatus', label: 'OT Status', visible: true },
     { key: 'ND1', label: 'ND1', visible: true },
     { key: "ND1_Breakup", label: "ND1 Breakup", visible: false },
@@ -738,35 +741,62 @@ const downloadExcel = () => {
                                     {{ getRegStatus(item) }}
                                 </span>
                             </template>
-
+                            <!-- attendance Type -->
                             <template v-else-if="column.key === 'attendanceType'">
                                 <span class="px-2 py-1 text-xs font-medium inline-block">
                                     {{ item[column.key] || "-" }}
                                 </span>
                             </template>
-                            <!-- UCH value and status -->
-                            <template v-else-if="column.key === 'UCH_Value'">
-                                <span :class="[
-                                    'px-2 py-1 rounded text-xs font-medium inline-block',
-                                    item.UCH_Status === 'APPROVED' || item.UCH_Status === 'Approved' ? 'bg-green-100 text-green-800' : '',
-                                    item.UCH_Status === 'PENDING_APPROVAL' ? 'bg-orange-100 text-orange-800' : '',
-                                    item.UCH_Status === 'REJECTED' || item.UCH_Status === 'Rejected' ? 'bg-red-100 text-red-800' : ''
-                                ]">
-                                    {{ item[column.key] || "-" }}
-                                </span>
-                            </template>
+<!-- OTHourAndMin (OT Hours) with Breakup and Status -->
+<template v-else-if="column.key === 'OTHourAndMin'">
+    <span
+        @click="item.OTHourAndMin_Breakup && handleBreakupClick(item.OTHourAndMin_Breakup)"
+        :class="[
+            'px-2 py-1 rounded text-xs font-medium inline-block',
+            item.OTStatus === 'APPROVED' || item.OTStatus === 'Approved' ? 'text-green-800' : '',
+            item.OTStatus === 'PENDING_APPROVAL' ? 'text-orange-800' : '',
+            item.OTStatus === 'REJECTED' || item.OTStatus === 'Rejected' ? 'text-red-800' : '',
+            item.OTHourAndMin_Breakup ? 'cursor-pointer text-orange-500 hover:underline' : ''
+        ]"
+        :title="item.OTHourAndMin_Breakup ? 'Show OT Hours Breakup' : ''"
+    >
+        {{ item[column.key] || "-" }}
+    </span>
+</template>
 
-                            <!-- TCH value and Status -->
-                            <template v-else-if="column.key === 'TCH_Value'">
-                                <span :class="[
-                                    'px-2 py-1 rounded text-xs font-medium inline-block',
-                                    item.TCH_Status === 'APPROVED' || item.TCH_Status === 'Approved' ? 'bg-green-100 text-green-800' : '',
-                                    item.TCH_Status === 'PENDING_APPROVAL' ? 'bg-orange-100 text-orange-800' : '',
-                                    item.TCH_Status === 'REJECTED' || item.TCH_Status === 'Rejected' ? 'bg-red-100 text-red-800' : ''
-                                ]">
-                                    {{ item[column.key] || "-" }}
-                                </span>
-                            </template>
+ <!-- TCH_Value with Breakup and Status -->
+<template v-else-if="column.key === 'TCH_Value'">
+    <span
+        @click="item.TCH_Value_Breakup && handleBreakupClick(item.TCH_Value_Breakup)"
+        :class="[
+            'px-2 py-1 rounded text-xs font-medium inline-block',
+            item.TCH_Status === 'APPROVED' || item.TCH_Status === 'Approved' ? 'bg-green-100 text-green-800' : '',
+            item.TCH_Status === 'PENDING_APPROVAL' ? 'bg-orange-100 text-orange-800' : '',
+            item.TCH_Status === 'REJECTED' || item.TCH_Status === 'Rejected' ? 'bg-red-100 text-red-800' : '',
+            item.TCH_Value_Breakup ? 'cursor-pointer text-orange-500 hover:underline' : ''
+        ]"
+        :title="item.TCH_Value_Breakup ? 'Show TCH Breakup' : ''"
+    >
+        {{ item[column.key] || "-" }}
+    </span>
+</template>
+
+<!-- UCH_Value with Breakup and Status -->
+<template v-else-if="column.key === 'UCH_Value'">
+    <span
+        @click="item.UCH_Value_Breakup && handleBreakupClick(item.UCH_Value_Breakup)"
+        :class="[
+            'px-2 py-1 rounded text-xs font-medium inline-block',
+            item.UCH_Status === 'APPROVED' || item.UCH_Status === 'Approved' ? 'bg-green-100 text-green-800' : '',
+            item.UCH_Status === 'PENDING_APPROVAL' ? 'bg-orange-100 text-orange-800' : '',
+            item.UCH_Status === 'REJECTED' || item.UCH_Status === 'Rejected' ? 'bg-red-100 text-red-800' : '',
+            item.UCH_Value_Breakup ? 'cursor-pointer text-orange-500 hover:underline' : ''
+        ]"
+        :title="item.UCH_Value_Breakup ? 'Show UCH Breakup' : ''"
+    >
+        {{ item[column.key] || "-" }}
+    </span>
+</template>
 
                             <!-- shift id and popup for update -->
                             <template v-else-if="column.key === 'ShiftId'">
@@ -831,17 +861,9 @@ const downloadExcel = () => {
                                     </div>
                                 </div>
                             </template>
-                            <!-- OT status  and Hours-->
-                            <template v-else-if="column.key === 'OTHourAndMin'">
-                                <span :class="[
-                                    'px-2 py-1 rounded text-xs font-medium inline-block',
-                                    item.OTStatus === 'APPROVED' || item.OTStatus === 'Approved' ? ' text-green-800' : '',
-                                    item.OTStatus === 'PENDING_APPROVAL' ? 'text-orange-800' : '',
-                                    item.OTStatus === 'REJECTED' || item.OTStatus === 'Rejected' ? ' text-red-800' : ''
-                                ]">
-                                    {{ item[column.key] || "-" }}
-                                </span>
-                            </template>
+
+ 
+                            <!-- OT status -->
                             <template v-else-if="column.key === 'OTStatus'">
                                 <span :class="[
                                     'px-2 py-1 rounded text-xs font-medium inline-block',
@@ -854,14 +876,15 @@ const downloadExcel = () => {
                             </template>
 
                             <!-- ND1, ND2, ExcessND1, ExcessND2 -->
-                            <template v-else-if="['ND1', 'ND2', 'ExcessND1', 'ExcessND2'].includes(column.key)">
+                            <template v-else-if="['ND1','OTHourAndMin', 'ND2', 'ExcessND1', 'ExcessND2'].includes(column.key)">
                                 <span @click="handleBreakupClick(item[`${column.key}_Breakup`])"
                                     class="cursor-pointer text-orange-500 hover:underline">
                                     {{ item[column.key] || "-" }}
                                 </span>
                             </template>
 
-                            <div v-else-if="showBreakupModal"
+<!-- ---------breakup pop up ---  -->
+                        <div v-else-if="showBreakupModal"
                                 class="fixed inset-0    bg-opacity-30  flex items-center justify-center z-50">
                                 <div class="bg-gray-100 border-[1px] border-gray-400  rounded-lg p-6 w-96 ">
                                     <h3 class="text-lg font-semibold mb-4">Breakup Details</h3>
@@ -955,6 +978,7 @@ const downloadExcel = () => {
                                     </button>
                                 </div>
                             </template>
+
                             <template v-if="column.key === 'approvalActions'">
                                 <div class="flex items-center gap-2">
                                     <button v-if="item.attendenceStatus !== 'Approved'" @click="handleApprove(item)"

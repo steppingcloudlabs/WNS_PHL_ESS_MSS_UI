@@ -1,4 +1,5 @@
 import axios from 'axios'
+import moment from 'moment';
 import { defineStore } from 'pinia'
 import constant from '../store/constanrSys'
 import c2 from "../../src/constant"
@@ -57,36 +58,50 @@ export const useUserStore = defineStore('user', {
     },
 
   // getTimeSheet Data
-    async fetchTimesheet(USERIds = null, startDate = null, endDate = null) {
-      console.log("user id array: ", USERIds);
-    
-      try {
-        const userStore = useUserStore();   
-        let defaultUserId = userStore.userId;
-    
-        // Fallback to current user if no USERIds passed
-        if (!USERIds || USERIds.length === 0) {
-          USERIds = [defaultUserId];
-        }
+async fetchTimesheet(USERIds = null, startDate = null, endDate = null) {
+  console.log("user id array: ", USERIds);
 
-        const response = await axios.get(`${constant.endpoint}/rest/catalog-service-rest/employeeTimeSheet`, {
-          params: {
-            USERID: USERIds,
-            // USERID: userIdsArray,
-            STARTDATE: startDate,
-            ENDDATE: endDate
-          }
-        });
-    
-        if (response.status === 200) {
-          this.setTimeSheet(response.data);
-          return true;
-        }
-      } catch (error) {
-        console.error("Failed to fetch timesheet:", error);
-        return false;
+  try {
+    const userStore = useUserStore();   
+    let defaultUserId = userStore.userId;
+
+    // Fallback to current user if no USERIds passed
+    if (!USERIds || USERIds.length === 0) {
+      USERIds = [defaultUserId];
+    }
+
+    // Get the full week boundaries (Sunday to Saturday)
+    const weekStart = moment(startDate).startOf('week');
+    const weekEnd = moment(endDate).endOf('week');
+    const from = weekStart.format('YYYY-MM-DD');
+    const to = weekEnd.format('YYYY-MM-DD');
+
+    const response = await axios.get(`${constant.endpoint}/rest/catalog-service-rest/employeeTimeSheet`, {
+      params: {
+        USERID: USERIds,
+        STARTDATE: from,
+        ENDDATE: to
       }
-    },
+    });
+
+    if (response.status === 200) {
+      // Convert original dates to moment objects for comparison
+      const filteredData = response.data.result.filter(entry => {
+        if (!entry.startDate) return false;
+        
+        const entryDate = moment(entry.startDate, 'YYYY-MM-DD');
+        return entryDate.isBetween(startDate, endDate, null, '[]');
+      });
+      console.log('Filtered timesheet data:', filteredData);    
+      this.setTimeSheet(filteredData);
+      return true;
+    }
+  } catch (error) {
+    console.error("Failed to fetch timesheet:", error);
+    return false;
+  }
+}
+,
 
     async  updateShift(loggedInUserId, startDate, workSchedule,  tempTimeExternalCode) {
   

@@ -11,7 +11,11 @@ import { useUserStore } from '../store/userStore';
 const userStore = useUserStore();
 
 // Access data through computed property
-const timesheetData = computed(() => userStore.timesheetData);
+const timesheetData = computed(() => {
+  changePage(1);
+  return userStore.timesheetData;
+});
+
 
 const LoggedInUserId = computed(() => userStore.userInfo);
 console.log("loggedin USer: ", LoggedInUserId.value.userId);
@@ -23,8 +27,8 @@ onMounted(async () => {
     loading.value = true;
 
     // Get previous month range using moment
-  const startOfPrevMonth = moment().subtract(1, 'months').startOf('month').format('YYYY-MM-DD');
-    const endOfPrevMonth = moment().subtract(1, 'months').endOf('month').format('YYYY-MM-DD');
+    const startOfPrevMonth = moment().startOf('month').format('YYYY-MM-DD');
+    const endOfPrevMonth = moment().format('YYYY-MM-DD');
     const res = await userStore.fetchTimesheet(null, startOfPrevMonth, endOfPrevMonth);
 
     // console.log("timesheet data: ", res);
@@ -434,6 +438,7 @@ const Shift = async () => {
     }
 };
 
+// breakup data
 const showBreakupModal = ref(false);
 const breakupData = ref([]); // This will hold the array of objects for the breakup
 const handleBreakupClick = (breakupArray) => {

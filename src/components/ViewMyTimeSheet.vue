@@ -23,8 +23,9 @@ const currentDate = new Date();
 const sevenDaysAgo = new Date(currentDate);
 sevenDaysAgo.setDate(currentDate.getDate() - 7);
 
-const startOfPrevMonth = moment().startOf('month').format('YYYY-MM-DD');
-const endOfPrevMonth = moment().format('YYYY-MM-DD');
+
+    const startOfPrevMonth = moment().startOf('month').format('YYYY-MM-DD');
+    const endOfPrevMonth = moment().format('YYYY-MM-DD');
 
 const fd = ref(startOfPrevMonth);
 const td = ref(endOfPrevMonth);
@@ -36,10 +37,12 @@ const toDate = ref('');
 console.log("fd, td: ", fd.value, td.value)
 
 const reserDateFilter = async () => {
-     const startDay = moment(fromDate.value, 'YYYY-MM-DD').day();
-    const endDay = moment(toDate.value, 'YYYY-MM-DD').day();
-        fd.value = startDay
-        td.value = endDay
+    const startOfPrevMonth = moment().startOf('month').format('YYYY-MM-DD');
+    const endOfPrevMonth = moment().format('YYYY-MM-DD');
+    //  const startDay = moment(fromDate.value, 'YYYY-MM-DD').day();
+    // const endDay = moment(toDate.value, 'YYYY-MM-DD').day();
+        fd.value = startOfPrevMonth
+        td.value = endOfPrevMonth
         loading.value = true;
    
     try {
@@ -55,24 +58,6 @@ const reserDateFilter = async () => {
     }
 };
 
-const fromDateConfig = {
-    dateFormat: 'Y-m-d',
-    enable: [
-        function (date) {
-            return date.getDay() === 0 // only Sundays
-        },
-    ],
-}
-
-const toDateConfig = {
-    dateFormat: 'Y-m-d',
-    enable: [
-        function (date) {
-            return date.getDay() === 6 // only Saturdays
-        },
-    ],
-}
-
 const dateSearch = async () => {
 
     fromDate.value = fd.value;
@@ -83,32 +68,9 @@ const dateSearch = async () => {
         return;
     }
 
-    // Validation: Start date must be Sunday (0), End date must be Saturday (6)
-    const startDay = moment(fromDate.value, 'YYYY-MM-DD').day();
-    const endDay = moment(toDate.value, 'YYYY-MM-DD').day();
+    const diffDays = toDate.value - fromDate.value;
 
-    if (startDay !== 0) {
-        alert('Start date must be a Sunday');
-        return;
-    }
-    if (endDay !== 6) {
-        alert('End date must be a Saturday');
-        return;
-    }
-
-    // Always set start to Monday and end to Sunday of the selected weeks
-    let start = moment(fromDate.value, 'YYYY-MM-DD').startOf('week')
-    let end = moment(toDate.value, 'YYYY-MM-DD').endOf('week')
-
-    // Adjust for moment's week starting on Sunday
-    fromDate.value = start.format('YYYY-MM-DD');
-    fd.value = fromDate.value;
-    toDate.value = end.format('YYYY-MM-DD');
-    td.value = toDate.value;
-
-    const diffDays = end.diff(start, 'days') + 1;
-
-    if (diffDays < 7 || diffDays > 31) {
+if (diffDays < 7 || diffDays > 31) {
         alert('Please select a date range between 7 and 30 days');
         return;
     }
@@ -226,7 +188,7 @@ const manager = computed(() => userStore.getisManager);
                     <div class="flex-1 min-w-0 ">
                         <label class="block mb-2 text-gray-700">from Date</label>
 
-                        <flat-pickr v-model="fd" :config="fromDateConfig" placeholder="from date"
+                        <flat-pickr v-model="fd"  placeholder="from date"
                             class="input border border-gray-300 rounded-md p-1" />
 
                     </div>
@@ -235,7 +197,7 @@ const manager = computed(() => userStore.getisManager);
                         <label class="block mb-2 text-gray-700">to Date</label>
                         <div class="flex items-center gap-x-2">
 
-                            <flat-pickr v-model="td" :config="toDateConfig" placeholder="to date"
+                            <flat-pickr v-model="td"  placeholder="to date"
                                 class="input border border-gray-300 rounded-md p-1"/>
 
                             <button @click="dateSearch"

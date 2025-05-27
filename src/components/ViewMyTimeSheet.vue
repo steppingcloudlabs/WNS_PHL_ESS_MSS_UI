@@ -69,9 +69,10 @@ const reserDateFilter = async () => {
 
        console.log("response from view my timesheet: ", response);
 
-       if(response.status!==200){
-             showNotification(`failed to get timesheet data: ${response.data.error.message}`,error);
+       if(!response.success){
+        showNotification(res.message, 'error');
        }
+
         // console.log(response)
         fromDate.value = "";
         toDate.value = "";
@@ -108,17 +109,21 @@ if (diffDays < 7 || diffDays > 31) {
     const employeeIds = selectedEmployees.value.map(emp => emp.userId);
     loading.value = true;
 
-    try {
+   
+        let response;
         if (employeeIds.length === 0) {
-            await userStore.fetchTimesheet(null, fromDate.value, toDate.value);
+            response = await userStore.fetchTimesheet(null, fromDate.value, toDate.value);
         } else {
-            await userStore.fetchTimesheet(employeeIds, fromDate.value, toDate.value);
+            response = await userStore.fetchTimesheet(employeeIds, fromDate.value, toDate.value);
         }
-    } catch (error) {
-        alert('Error fetching timesheet data: ' + error.message);
-    } finally {
-        loading.value = false;
-    }
+
+        if(!response.success){
+            loading.value = false;
+            showNotification(res.message, 'error');
+       }
+
+         
+    
 };
 
 const filteredReportees = computed(() => {
@@ -150,13 +155,24 @@ const manager = computed(() => userStore.getisManager);
 
 <template>
     <div class="relative">
+        <!-- Notification -->
+           
         <!-- Full-screen loader -->
         <div v-if="loading" class="fixed inset-0 z-50 bg-white/70 flex items-center justify-center">
             <div class="animate-spin rounded-full h-12 w-12 border-t-4 border-amber-500 border-solid"></div>
         </div>
+        <div v-else>
+             <div v-if="notification.visible" :class="[
+                'fixed z-[99999] top-10 right-10 px-4 py-2 rounded shadow-lg text-white',
+                notification.type === 'success' ? 'bg-green-500' : 'bg-red-500'
+            ]">
+                {{ notification.message }}
+            </div>
+        </div>
 
         <div class="w-full px-4 sm:px-6 lg:px-8 mx-auto">
             <div class="text-lg font-semibold mb-2">View My Timesheet</div>
+            
 
             <div class="flex-1 min-w-0 my-4" v-if="manager">
                 <label class="block mb-2 text-gray-700">Employee Name / ID *</label>

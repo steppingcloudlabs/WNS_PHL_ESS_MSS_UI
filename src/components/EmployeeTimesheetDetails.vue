@@ -41,8 +41,6 @@ onMounted(async () => {
     }
 });
 
-
-
 // props to handle colums for view, edit and approve
 const props = defineProps({
     isEditable: {
@@ -719,10 +717,10 @@ const downloadExcel = () => {
             <div class="max-h-[600px] overflow-y-auto relative">
                 <table v-if="!loading" class="table-auto min-w-full divide-y  divide-gray-200">
                 
-                    <thead class=" bg-gray-200 sticky top-0 z-10 ">
+                    <thead class=" bg-gray-200  sticky top-0 z-10 ">
                     <tr>
                         <th v-for="column in visibleColumns" :key="column.key"
-                            class=" px-3 py-3  hover:cursor-pointer text-left text-xs font-medium text-gray-500 whitespace-nowrap"
+                            class=" px-3 py-3  hover:cursor-pointer text-left text-xs font-medium text-black whitespace-nowrap"
                             :class="{
                                 'w-auto min-w-[50px]': ['srNo'].includes(column.key),
                                 'w-auto min-w-[50px]': ['ShiftId', 'ND1', 'ND2', 'Meal', 'Transport'].includes(column.key),

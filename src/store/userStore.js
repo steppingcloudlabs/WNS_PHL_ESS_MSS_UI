@@ -99,7 +99,10 @@ async fetchTimesheet(USERIds = null, startDate = null, endDate = null) {
     }
   } catch (error) {
     console.error("Failed to fetch timesheet:", error);
-    return false;
+    return {
+      success:false,
+      message: response.data?.result?.[0]?.message || 'Unknown error occurred'
+    };
   }
 }
 ,

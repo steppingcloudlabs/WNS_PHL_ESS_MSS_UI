@@ -64,12 +64,10 @@ const reserDateFilter = async () => {
         td.value = endOfPrevMonth
         loading.value = true;
    
-    try {
+    
        const response =  await userStore.fetchTimesheet(null, startOfPrevMonth, endOfPrevMonth);
-
-       console.log("response from view my timesheet: ", response);
-
        if(!response.success){
+        loading.value = false;
         showNotification(res.message, 'error');
        }
 
@@ -79,9 +77,8 @@ const reserDateFilter = async () => {
         sqe.value = null;
         selectedEmployees.value = [];
         searchInput.value = '';
-    } finally {
         loading.value = false;
-    }
+    
 };
 
 const dateSearch = async () => {
@@ -120,6 +117,9 @@ if (diffDays < 7 || diffDays > 31) {
         if(!response.success){
             loading.value = false;
             showNotification(res.message, 'error');
+       }
+       else{
+        loading.value = false;
        }
 
          
@@ -161,14 +161,14 @@ const manager = computed(() => userStore.getisManager);
         <div v-if="loading" class="fixed inset-0 z-50 bg-white/70 flex items-center justify-center">
             <div class="animate-spin rounded-full h-12 w-12 border-t-4 border-amber-500 border-solid"></div>
         </div>
-        <div v-else>
+        
              <div v-if="notification.visible" :class="[
                 'fixed z-[99999] top-10 right-10 px-4 py-2 rounded shadow-lg text-white',
                 notification.type === 'success' ? 'bg-green-500' : 'bg-red-500'
             ]">
                 {{ notification.message }}
             </div>
-        </div>
+        
 
         <div class="w-full px-4 sm:px-6 lg:px-8 mx-auto">
             <div class="text-lg font-semibold mb-2">View My Timesheet</div>

@@ -714,7 +714,7 @@ const downloadExcel = () => {
                 </div>
             </div>
 
-            <div class="max-h-[600px] overflow-y-auto relative">
+            <div class="max-h-[500px] overflow-y-auto relative">
                 <table v-if="!loading" class="table-auto min-w-full divide-y  divide-gray-200">
                 
                     <thead class=" bg-gray-200  sticky top-0 z-10 ">
@@ -743,7 +743,7 @@ const downloadExcel = () => {
                     <tr v-for="item in paginatedData" :key="item.srNo"
                         class="divide-x text-center divide-gray-200 hover:bg-gray-50">
                         <td v-for="column in visibleColumns" :key="column.key"
-                            class="px-3 py-3 text-xs whitespace-nowrap " :class="{
+                            class="px-3 py-2 text-xs whitespace-nowrap " :class="{
                                 'text-center': ['srNo', 'nd1', 'nd2', 'meal', 'transport'].includes(column.key)
                             }">
                             <!-- attendence Status -->
@@ -901,28 +901,49 @@ const downloadExcel = () => {
 
 <!-- ---------breakup pop up ---  -->
                         <div v-else-if="showBreakupModal"
-                                class="fixed inset-0    bg-opacity-30  flex items-center justify-center z-50">
-                                <div class="bg-gray-100 border-[1px] border-gray-400  rounded-lg p-6 w-96 ">
+                                class="fixed inset-0   bg-opacity-30  flex items-center justify-center z-50">
+                                <div class="bg-gray-100 border-[1px] border-gray-400  rounded-lg p-6  ">
                                     <h3 class="text-lg font-semibold mb-4">Breakup Details</h3>
 
                                     <div v-if="breakupData.length === 0" class="text-gray-500 text-sm ">
                                         No breakup data available.
                                     </div>
 
-                                    <ul v-else class="space-y-2 flex flex-col">
+                                    <!-- <ul  class="space-y-2 flex flex-col">
+
+                                        <li 
+                                            class=" flex justify-between items-center">
+                                            <span class="text-sm font-medium ">excess ND filter next working day wokring day</span>
+                                            <span class="ml-3 text-sm text-gray-800">demo data</span>
+                                        </li>
+                                        <li 
+                                            class=" flex justify-between items-center flex-wrap">
+                                            <span class="text-sm font-medium ">DEMO excess ND filter next working day wokring day</span>
+                                            <span class="ml-3 text-sm text-gray-800">demo data</span>
+                                        </li>
+                                        <li 
+                                            class=" flex justify-between items-center">
+                                            <span class="text-sm font-medium ">excess ND filter next working day wokring day</span>
+                                            <span class="ml-3 text-sm text-gray-800">demo data</span>
+                                        </li>
+                                        
+                                       
+                                    </ul> -->
+
+                                    <!-- <ul v-else class="space-y-2 flex flex-col">
 
                                         <li v-for="(breakup, index) in breakupData" :key="index"
-                                            class="flex justify-between items-center">
+                                            class=" flex justify-between items-center">
                                             <span class="text-sm font-medium w-[300px]">{{ breakup.name || "-" }}</span>
                                             <span class="text-sm text-gray-800">{{ breakup.hoursAndMinutes || "-"
                                                 }}</span>
                                         </li>
                                        
-                                    </ul>
+                                    </ul> -->
 
                                     <div class="flex justify-end mt-8">
                                         <button @click="showBreakupModal = false"
-                                            class="px-4 py-2 bg-red-400 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
+                                            class="px-4 py-2 bg-red-400 text-sm font-medium text-black bg-gray-100 rounded-md hover:bg-red-600">
                                             Close
                                         </button>
                                     </div>
@@ -957,9 +978,9 @@ const downloadExcel = () => {
                                 <span :class="[
                                     'px-2 py-1 rounded text-xs font-medium inline-block',
                                     // Status-based background colors
-                                    item[column.key] === 'approved' ? 'bg-green-100 text-green-800' : '',
-                                    item[column.key] === 'applied' || item[column.key] === 'pending' ? 'bg-orange-100 text-orange-800' : '',
-                                    item[column.key] === 'rejected' ? 'bg-red-100 text-red-800' : '',
+                                    item[column.key] === 'APPROVED' ? 'bg-green-100 text-green-800' : '',
+                                    item[column.key] === 'APPLIED' || item[column.key] === 'pending' ? 'bg-orange-100 text-orange-800' : '',
+                                    item[column.key] === 'REJECTED' ? 'bg-red-100 text-red-800' : '',
                                 ]">
                                     <div>
                                         {{ item[`${column.key}Hours`] || "-" }}

@@ -27,6 +27,25 @@ sevenDaysAgo.setDate(currentDate.getDate() - 7);
     const startOfPrevMonth = moment().startOf('month').format('YYYY-MM-DD');
     const endOfPrevMonth = moment().format('YYYY-MM-DD');
 
+const notification = ref({
+    message: '',
+    type: '', // 'success' or 'error'
+    visible: false,
+});
+
+const showNotification = (message, type) => {
+    notification.value = {
+        message,
+        type,
+        visible: true,
+    };
+
+    //  hide the notification after 3 seconds
+    setTimeout(() => {
+        notification.value.visible = false;
+    }, 3000);
+};
+
 const fd = ref(startOfPrevMonth);
 const td = ref(endOfPrevMonth);
 
@@ -46,8 +65,14 @@ const reserDateFilter = async () => {
         loading.value = true;
    
     try {
-        await userStore.fetchTimesheet(null, startOfPrevMonth, endOfPrevMonth);
-        
+       const response =  await userStore.fetchTimesheet(null, startOfPrevMonth, endOfPrevMonth);
+
+       console.log("response from view my timesheet: ", response);
+
+       if(response.status!==200){
+             showNotification(`failed to get timesheet data: ${response.data.error.message}`,error);
+       }
+        // console.log(response)
         fromDate.value = "";
         toDate.value = "";
         sqe.value = null;
@@ -160,13 +185,13 @@ const manager = computed(() => userStore.getisManager);
                     </div>
 
                     <button @click="dateSearch"
-                        class="ml-3 flex items-center gap-2 bg-red-400 py-2 px-4 rounded-md text-white">
+                        class="ml-3 flex items-center gap-2 hover:bg-red-600 bg-red-400 py-2 px-4 rounded-md text-white">
                         <Search class="w-5 h-5" />
                         <span>Search</span>
                     </button>
 
                     <button @click="reserDateFilter"
-                        class="ml-3 flex items-center gap-2 bg-red-400 py-2 px-4 rounded-md text-white">
+                        class="ml-3 flex items-center gap-2 hover:bg-red-600 bg-red-400 py-2 px-4 rounded-md text-white">
                         <RefreshCw class="w-5 h-5" />
                         <span>Reset</span>
                     </button>

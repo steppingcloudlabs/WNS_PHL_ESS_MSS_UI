@@ -36,6 +36,7 @@ onMounted(async () => {
     if (res) {
         loading.value = false;
     } else {
+        loading.value = false;
         showNotification('failed to get timesheet data', 'error');
     }
 });
@@ -53,7 +54,6 @@ const props = defineProps({
         default: false
     }
 });
-
 
 const isFullscreen = ref(false);
 const activeSearch = ref('');
@@ -385,9 +385,9 @@ const handleShiftClick = async (item) => {
             const sevenDaysAgo = new Date(currentDate);
             sevenDaysAgo.setDate(currentDate.getDate() - 7);
 
-            const defaultEndDate = currentDate.toISOString().split('T')[0];
-            const defaultStartDate = sevenDaysAgo.toISOString().split('T')[0];
-            await userStore.fetchTimesheet(null, defaultStartDate, defaultEndDate);
+            // const defaultEndDate = currentDate.toISOString().split('T')[0];
+            // const defaultStartDate = sevenDaysAgo.toISOString().split('T')[0];
+            // await userStore.fetchTimesheet(null, defaultStartDate, defaultEndDate);
 
 
         } else {
@@ -415,7 +415,6 @@ const Shift = async () => {
         tempTimeExternalCode.value
     );
 
-
     console.log('Shift update response:', res.success);
 
     if (res.success) {
@@ -428,7 +427,7 @@ const Shift = async () => {
         sevenDaysAgo.setDate(currentDate.getDate() - 7);
         const defaultEndDate = currentDate.toISOString().split('T')[0];
         const defaultStartDate = sevenDaysAgo.toISOString().split('T')[0];
-        userStore.fetchTimesheet(null, defaultStartDate, defaultEndDate);
+        // userStore.fetchTimesheet(null, defaultStartDate, defaultEndDate);
 
     } else {
         shiftupdateLoader.value = false;
@@ -632,7 +631,7 @@ const downloadExcel = () => {
                     <span class="font-semibold text-sm">{{ column.label }}:</span>
                     <span class="text-sm text-gray-800">
 
-                        <template v-if="column.key === 'RegStatus' || column.key === 'OTStatus'">
+                        <template v-if="column.key === 'RegStatus'">
                             <span :class="[
                                 'px-2 py-1 rounded-full text-xs font-medium inline-block',
                                 row[column.key] === 'APPROVED' ? 'bg-green-100 text-green-800' : '',
@@ -640,6 +639,17 @@ const downloadExcel = () => {
                                 row[column.key] === 'REJECTED' ? 'bg-red-100 text-red-800' : ''
                             ]">
                                 {{ getRegStatus(row) }}
+                            </span>
+                        </template>
+
+                        <template v-else-if=" column.key === 'OTStatus'">
+                            <span :class="[
+                                'px-2 py-1 rounded-full text-xs font-medium inline-block',
+                                row[column.key] === 'APPROVED' ? 'bg-green-100 text-green-800' : '',
+                                row[column.key] === 'PENDING_APPROVAL' ? 'bg-yellow-100 text-yellow-800' : '',
+                                row[column.key] === 'REJECTED' ? 'bg-red-100 text-red-800' : ''
+                            ]">
+                                {{ row[column.key] || "-" }}
                             </span>
                         </template>
 
@@ -675,7 +685,7 @@ const downloadExcel = () => {
                                 row[column.key] === 'rejected' ? 'bg-red-100 text-red-800' : '',
                             ]">
                                 {{ row[`${column.key}Hours`] || "-" }}
-                                {{ row[column.key] ? `(${row[column.key]})` : '' }}
+                                
                             </span>
                         </template>
 
@@ -696,7 +706,7 @@ const downloadExcel = () => {
 
         <!-- Table View -->
 
-        <div v-else class="overflow-x-auto pb-4  py-10">
+        <div v-else class="relative overflow-x-auto pb-4  py-10">
 
             <div v-if="loading" class="flex justify-center items-center mb-4">
                 <div class="flex flex-col items-center">
@@ -706,11 +716,13 @@ const downloadExcel = () => {
                 </div>
             </div>
 
-            <table v-if="!loading" class="table-auto min-w-full divide-y  divide-gray-200">
-                <thead class="bg-gray-50 sticky top-0 z-10">
+            <div class="max-h-[600px] overflow-y-auto relative">
+                <table v-if="!loading" class="table-auto min-w-full divide-y  divide-gray-200">
+                
+                    <thead class=" bg-gray-200 sticky top-0 z-10 ">
                     <tr>
                         <th v-for="column in visibleColumns" :key="column.key"
-                            class="px-3 py-3 hover:cursor-pointer text-left text-xs font-medium text-gray-500 whitespace-nowrap"
+                            class=" px-3 py-3  hover:cursor-pointer text-left text-xs font-medium text-gray-500 whitespace-nowrap"
                             :class="{
                                 'w-auto min-w-[50px]': ['srNo'].includes(column.key),
                                 'w-auto min-w-[50px]': ['ShiftId', 'ND1', 'ND2', 'Meal', 'Transport'].includes(column.key),
@@ -728,6 +740,7 @@ const downloadExcel = () => {
                         </th>
                     </tr>
                 </thead>
+
                 <tbody class="bg-white divide-y divide-gray-200">
                     <tr v-for="item in paginatedData" :key="item.srNo"
                         class="divide-x text-center divide-gray-200 hover:bg-gray-50">
@@ -739,9 +752,9 @@ const downloadExcel = () => {
                             <template v-if="column.key === 'RegStatus'">
                                 <span :class="[
                                     'px-2 py-1 text-center text-xs font-medium inline-block',
-                                    getRegStatus(item) === 'APPROVED' ? 'bg-green-100 text-green-800' : '',
-                                    getRegStatus(item) === 'PENDING_APPROVAL' ? 'bg-yellow-100 text-yellow-800' : '',
-                                    getRegStatus(item) === 'Rejected' ? 'bg-red-100 text-red-800' : ''
+                                    getRegStatus(item).toLowerCase() === 'approved' ? 'bg-green-100 text-green-800' : '',
+                                    getRegStatus(item).toLowerCase() === 'pending_approval' ? 'bg-yellow-100 text-yellow-800' : '',
+                                    getRegStatus(item).toLowerCase() === 'rejected' ? 'bg-red-100 text-red-800' : ''
                                 ]">
                                     {{ getRegStatus(item) }}
                                 </span>
@@ -758,9 +771,9 @@ const downloadExcel = () => {
         @click="item.OTHourAndMin_Breakup && handleBreakupClick(item.OTHourAndMin_Breakup)"
         :class="[
             'px-2 py-1 rounded text-xs font-medium inline-block',
-            item.OTStatus === 'APPROVED' || item.OTStatus === 'Approved' ? 'text-green-800' : '',
-            item.OTStatus === 'PENDING_APPROVAL' ? 'text-orange-800' : '',
-            item.OTStatus === 'REJECTED' || item.OTStatus === 'Rejected' ? 'text-red-800' : '',
+            item.OTStatus.toLowerCase() === 'approved'  ? 'text-green-800' : '',
+            item.OTStatus.toLowerCase() === 'pending_approval' ? 'text-orange-800' : '',
+            item.OTStatus.toLowerCase() === 'rejected'  ? 'text-red-800' : '',
             item.OTHourAndMin_Breakup ? 'cursor-pointer text-orange-500 hover:underline' : ''
         ]"
         :title="item.OTHourAndMin_Breakup ? 'Show OT Hours Breakup' : ''"
@@ -775,9 +788,9 @@ const downloadExcel = () => {
         @click="item.TCH_Value_Breakup && handleBreakupClick(item.TCH_Value_Breakup)"
         :class="[
             'px-2 py-1 rounded text-xs font-medium inline-block',
-            item.TCH_Status === 'APPROVED' || item.TCH_Status === 'Approved' ? 'bg-green-100 text-green-800' : '',
-            item.TCH_Status === 'PENDING_APPROVAL' ? 'bg-orange-100 text-orange-800' : '',
-            item.TCH_Status === 'REJECTED' || item.TCH_Status === 'Rejected' ? 'bg-red-100 text-red-800' : '',
+            item.TCH_Status.toLowerCase() === 'approved' || item.TCH_Status === 'Approved' ? 'bg-green-100 text-green-800' : '',
+            item.TCH_Status.toLowerCase() === 'pending_approval' ? 'bg-orange-100 text-orange-800' : '',
+            item.TCH_Status.toLowerCase() === 'rejected' || item.TCH_Status === 'Rejected' ? 'bg-red-100 text-red-800' : '',
             item.TCH_Value_Breakup ? 'cursor-pointer text-orange-500 hover:underline' : ''
         ]"
         :title="item.TCH_Value_Breakup ? 'Show TCH Breakup' : ''"
@@ -902,7 +915,7 @@ const downloadExcel = () => {
 
                                         <li v-for="(breakup, index) in breakupData" :key="index"
                                             class="flex justify-between items-center">
-                                            <span class="text-sm font-medium">{{ breakup.name || "-" }}</span>
+                                            <span class="text-sm font-medium w-[300px]">{{ breakup.name || "-" }}</span>
                                             <span class="text-sm text-gray-800">{{ breakup.hoursAndMinutes || "-"
                                                 }}</span>
                                         </li>
@@ -950,13 +963,10 @@ const downloadExcel = () => {
                                     item[column.key] === 'applied' || item[column.key] === 'pending' ? 'bg-orange-100 text-orange-800' : '',
                                     item[column.key] === 'rejected' ? 'bg-red-100 text-red-800' : '',
                                 ]">
-                                    <template v-if="item[column.key] === 'approved'">
+                                    <div>
                                         {{ item[`${column.key}Hours`] || "-" }}
-                                    </template>
-                                    <template v-else>
-                                        {{ item[`${column.key}Hours`] ? `${item[`${column.key}Hours`]}
-                                        (${item[column.key]})` : "-" }}
-                                    </template>
+                                    </div>
+                                   
                                 </span>
                             </template>
 
@@ -1000,6 +1010,7 @@ const downloadExcel = () => {
                     </tr>
                 </tbody>
             </table>
+            </div>
         </div>
 
         <!-- pagination handle -->

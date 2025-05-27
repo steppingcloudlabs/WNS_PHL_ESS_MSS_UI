@@ -85,14 +85,15 @@ async fetchTimesheet(USERIds = null, startDate = null, endDate = null) {
     });
 
     if (response.status === 200) {
-      // Convert original dates to moment objects for comparison
+      // console.log("response: ",response)
+      
       const filteredData = response.data.result.filter(entry => {
         if (!entry.startDate) return false;
         
         const entryDate = moment(entry.startDate, 'YYYY-MM-DD');
         return entryDate.isBetween(startDate, endDate, null, '[]');
       });
-      console.log('Filtered timesheet data:', filteredData);    
+        
       this.setTimeSheet(filteredData);
       return true;
     }

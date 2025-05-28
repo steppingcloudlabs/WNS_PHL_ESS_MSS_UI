@@ -772,7 +772,7 @@ const downloadExcel = () => {
             item.OTStatus.toLowerCase() === 'approved'  ? 'text-green-800' : '',
             item.OTStatus.toLowerCase() === 'pending_approval' ? 'text-orange-800' : '',
             item.OTStatus.toLowerCase() === 'rejected'  ? 'text-red-800' : '',
-            item.OTHourAndMin_Breakup ? 'cursor-pointer text-orange-500 hover:underline' : ''
+            item.OTHourAndMin_Breakup ? 'cursor-pointer  hover:underline' : ''
         ]"
         :title="item.OTHourAndMin_Breakup ? 'Show OT Hours Breakup' : ''"
     >
@@ -789,7 +789,7 @@ const downloadExcel = () => {
             item.TCH_Status.toLowerCase() === 'approved' || item.TCH_Status === 'Approved' ? 'bg-green-100 text-green-800' : '',
             item.TCH_Status.toLowerCase() === 'pending_approval' ? 'bg-orange-100 text-orange-800' : '',
             item.TCH_Status.toLowerCase() === 'rejected' || item.TCH_Status === 'Rejected' ? 'bg-red-100 text-red-800' : '',
-            item.TCH_Value_Breakup ? 'cursor-pointer text-orange-500 hover:underline' : ''
+            item.TCH_Value_Breakup ? 'cursor-pointer  hover:underline' : ''
         ]"
         :title="item.TCH_Value_Breakup ? 'Show TCH Breakup' : ''"
     >
@@ -806,11 +806,12 @@ const downloadExcel = () => {
             item.UCH_Status === 'APPROVED' || item.UCH_Status === 'Approved' ? 'bg-green-100 text-green-800' : '',
             item.UCH_Status === 'PENDING_APPROVAL' ? 'bg-orange-100 text-orange-800' : '',
             item.UCH_Status === 'REJECTED' || item.UCH_Status === 'Rejected' ? 'bg-red-100 text-red-800' : '',
-            item.UCH_Value_Breakup ? 'cursor-pointer text-orange-500 hover:underline' : ''
+            item.UCH_Value_Breakup ? 'cursor-pointer  hover:underline' : ''
         ]"
         :title="item.UCH_Value_Breakup ? 'Show UCH Breakup' : ''"
     >
         {{ item[column.key] || "-" }}
+        <!-- {{item.UCH_Status}} -->
     </span>
 </template>
 
@@ -894,14 +895,16 @@ const downloadExcel = () => {
                             <!-- ND1, ND2, ExcessND1, ExcessND2 -->
                             <template v-else-if="['ND1','OTHourAndMin', 'ND2', 'ExcessND1', 'ExcessND2'].includes(column.key)">
                                 <span @click="handleBreakupClick(item[`${column.key}_Breakup`])"
-                                    class="cursor-pointer text-orange-500 hover:underline">
+                                    class="cursor-pointer text-black-500 hover:underline">
                                     {{ item[column.key] || "-" }}
                                 </span>
                             </template>
 
 <!-- ---------breakup pop up ---  -->
                         <div v-else-if="showBreakupModal"
+                       
                                 class="fixed inset-0   bg-opacity-30  flex items-center justify-center z-50">
+                                <!-- breakupData: {{breakupData}} -->
                                 <div class="bg-gray-100 border-[1px] border-gray-400  rounded-lg p-6  ">
                                     <h3 class="text-lg font-semibold mb-4">Breakup Details</h3>
 
@@ -909,7 +912,7 @@ const downloadExcel = () => {
                                         No breakup data available.
                                     </div>
 
-                                    <!-- <ul  class="space-y-2 flex flex-col">
+                                     <!-- <ul  class="space-y-2 flex flex-col">
 
                                         <li 
                                             class=" flex justify-between items-center">
@@ -928,18 +931,18 @@ const downloadExcel = () => {
                                         </li>
                                         
                                        
-                                    </ul> -->
+                                    </ul>  -->
 
-                                    <!-- <ul v-else class="space-y-2 flex flex-col">
+                                    <ul v-else class="space-y-2 flex flex-col">
 
                                         <li v-for="(breakup, index) in breakupData" :key="index"
-                                            class=" flex justify-between items-center">
-                                            <span class="text-sm font-medium w-[300px]">{{ breakup.name || "-" }}</span>
-                                            <span class="text-sm text-gray-800">{{ breakup.hoursAndMinutes || "-"
+                                            class=" flex justify-between items-center  ">
+                                            <span class="text-sm font-medium ">{{ breakup.name || " - " }} &nbsp;&nbsp; </span>
+                                            <span class="text-sm text-gray-800"> {{ breakup.hoursAndMinutes || "-"
                                                 }}</span>
                                         </li>
                                        
-                                    </ul> -->
+                                    </ul>
 
                                     <div class="flex justify-end mt-8">
                                         <button @click="showBreakupModal = false"

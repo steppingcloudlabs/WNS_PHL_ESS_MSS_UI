@@ -419,7 +419,7 @@ const Shift = async () => {
 
     if (res.success) {
         shiftupdateLoader.value = false; 
-        showNotification('Shift updated successfully', 'success');
+        showNotification('Shift update workflow initiated successfully.', 'success');
         showShiftModal.value = false;
 
         const currentDate = new Date();

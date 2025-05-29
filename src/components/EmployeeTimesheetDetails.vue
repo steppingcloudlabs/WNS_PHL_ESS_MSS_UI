@@ -18,8 +18,6 @@ const timesheetData = computed(() => {
 
 
 const LoggedInUserId = computed(() => userStore.userInfo);
-console.log("loggedin USer: ", LoggedInUserId.value.userId);
-
 
 const loading = ref(null);
 // Load data when component mounts
@@ -717,37 +715,45 @@ const downloadExcel = () => {
             <div class="max-h-[500px] overflow-y-auto relative">
                 <table v-if="!loading" class="table-auto min-w-full divide-y  divide-gray-200">
                 
-                    <thead class=" bg-gray-200  sticky top-0 z-10 ">
+                    <thead class="bg-gray-200 sticky font-medium top-0 z-[1000]">
                     <tr>
                         <th v-for="column in visibleColumns" :key="column.key"
-                            class=" px-3 py-3  hover:cursor-pointer text-left text-xs font-medium text-black whitespace-nowrap"
+                            class=" px-3 py-3  hover:cursor-pointer text-left text-xs  font-medium text-black whitespace-nowrap"
                             :class="{
-                                'w-auto min-w-[50px]': ['srNo'].includes(column.key),
-                                'w-auto min-w-[50px]': ['ShiftId', 'ND1', 'ND2', 'Meal', 'Transport'].includes(column.key),
-                                'w-auto min-w-[50px]': ['Tardiness', 'Undertime', 'OTHours'].includes(column.key),
-                                'w-auto min-w-[50px]': ['shiftDate', 'inTime', 'outTime'].includes(column.key),
-                                'w-auto min-w-[50px]': ['attendenceStatus', ' RegStatus'].includes(column.key)
-                            }" @click="toggleSort(column.key)">
-                            <div class="flex items-center justify-between gap-2">
+                                        'sticky font-medium left-0 bg-gray-200 z-20': column.key === 'startDate',
+                                        'w-auto font-medium min-w-[50px]': ['ShiftId', 'ND1', 'ND2', 'Meal', 'Transport'].includes(column.key),
+                                        'w-auto font-medium min-w-[50px]': ['Tardiness', 'Undertime', 'OTHours'].includes(column.key),
+                                        'w-auto font-medium min-w-[50px]': ['shiftDate', 'inTime', 'outTime'].includes(column.key),
+                                        'w-auto font-medium min-w-[50px]': ['attendenceStatus', 'RegStatus'].includes(column.key)
+                                    }"  @click="toggleSort(column.key)">
+                            
+                            <div class="flex items-center justify-between gap-2 font-medium">
                                 <span>{{ column.label }}</span>
                                 <div v-if="column.key !== 'actions'" class="flex flex-col">
                                     <ChevronUp class="w-3 h-3" />
                                     <ChevronDown class="w-3 h-3" />
                                 </div>
                             </div>
+                            
                         </th>
                     </tr>
                 </thead>
 
-                <tbody class="bg-white divide-y divide-gray-200">
+                <tbody class="tablebody bg-white divide-y divide-gray-200 ">
                     <tr v-for="item in paginatedData" :key="item.srNo"
-                        class="divide-x text-center divide-gray-200 hover:bg-gray-50">
+                        class="divide-x  divide-gray-200 hover:bg-gray-50 text-center text-xs">
                         <td v-for="column in visibleColumns" :key="column.key"
-                            class="px-3 py-2 text-xs whitespace-nowrap " :class="{
-                                'text-center': ['srNo', 'nd1', 'nd2', 'meal', 'transport'].includes(column.key)
-                            }">
+                            :class="{
+                                        'sticky left-0 bg-white z-10 divide-y divide-gray-200': column.key === 'startDate',
+                                        '': ['srNo', 'nd1', 'nd2', 'meal', 'transport'].includes(column.key)
+                                    }">
+
+                                     <!-- Shift Date (sticky column) -->
+                                    <template v-if="column.key === 'startDate'">
+                                        <span class="block divide-y divide-gray-200">{{ item[column.key] }}</span>
+                                    </template>
                             <!-- attendence Status -->
-                            <template v-if="column.key === 'RegStatus'">
+                            <template v-else-if="column.key === 'RegStatus'">
                                 <span :class="[
                                     'px-2 py-1 text-center text-xs font-medium inline-block',
                                     getRegStatus(item).toLowerCase() === 'approved' ? 'bg-green-100 text-green-800' : '',
@@ -757,6 +763,7 @@ const downloadExcel = () => {
                                     {{ getRegStatus(item) }}
                                 </span>
                             </template>
+
                             <!-- attendance Type -->
                             <template v-else-if="column.key === 'attendanceType'">
                                 <span class="px-2 py-1 text-xs font-medium inline-block">
@@ -822,7 +829,7 @@ const downloadExcel = () => {
                                     {{ item[column.key] || "-" }}
                                 </span>
                                 <div v-if="showShiftModal"
-                                    class="fixed inset-0 bg-opacity-30 flex items-center justify-center z-50">
+                                    class="fixed inset-0 bg-opacity-30 flex items-center justify-center z-[9999]">
                                     <div class="bg-white rounded-lg p-6 w-96 shadow-xl">
                                         
                                         <h3 class="text-lg font-semibold mb-4">Update Shift</h3>
@@ -903,7 +910,7 @@ const downloadExcel = () => {
 <!-- ---------breakup pop up ---  -->
                         <div v-else-if="showBreakupModal"
                        
-                                class="fixed inset-0   bg-opacity-30  flex items-center justify-center z-50">
+                                class="fixed inset-0   bg-opacity-30  flex items-center justify-center z-[8889]">
                                 <!-- breakupData: {{breakupData}} -->
                                 <div class="bg-gray-100 border-[1px] border-gray-400  rounded-lg p-6  ">
                                     <h3 class="text-lg font-semibold mb-4">Breakup Details</h3>
@@ -912,27 +919,7 @@ const downloadExcel = () => {
                                         No breakup data available.
                                     </div>
 
-                                     <!-- <ul  class="space-y-2 flex flex-col">
-
-                                        <li 
-                                            class=" flex justify-between items-center">
-                                            <span class="text-sm font-medium ">excess ND filter next working day wokring day</span>
-                                            <span class="ml-3 text-sm text-gray-800">demo data</span>
-                                        </li>
-                                        <li 
-                                            class=" flex justify-between items-center flex-wrap">
-                                            <span class="text-sm font-medium ">DEMO excess ND filter next working day wokring day</span>
-                                            <span class="ml-3 text-sm text-gray-800">demo data</span>
-                                        </li>
-                                        <li 
-                                            class=" flex justify-between items-center">
-                                            <span class="text-sm font-medium ">excess ND filter next working day wokring day</span>
-                                            <span class="ml-3 text-sm text-gray-800">demo data</span>
-                                        </li>
-                                        
-                                       
-                                    </ul>  -->
-
+                                    
                                     <ul v-else class="space-y-2 flex flex-col">
 
                                         <li v-for="(breakup, index) in breakupData" :key="index"
@@ -1089,6 +1076,40 @@ const downloadExcel = () => {
 
 <style scoped>
 /* Improved scrollbar styling */
+.table-container {
+    overflow-x: auto;
+    position: relative;
+}
+
+.tablebody{
+    font-weight: 400;
+    
+}
+
+.sticky {
+    position: sticky;
+    
+}
+
+thead .sticky {
+    z-index: 20;
+}
+
+.sticky::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 1px;
+    
+    
+}
+
+table {
+    min-width: 100%;
+}
+
 .overflow-x-auto {
     scrollbar-width: thin;
     scrollbar-color: #cbd5e1 #f8fafc;
@@ -1114,8 +1135,6 @@ const downloadExcel = () => {
     background-color: #94a3b8;
 }
 
-
-
 /* Responsive table cells */
 @media (max-width: 767px) {
     .table-cell {
@@ -1123,7 +1142,6 @@ const downloadExcel = () => {
         font-size: 0.875rem;
     }
 
-    /* Shorter labels for mobile */
     [data-label]::before {
         content: attr(data-label);
         font-weight: 600;
@@ -1133,7 +1151,6 @@ const downloadExcel = () => {
 }
 
 .pagination-button {
-
     transition-property: colors;
     transition-duration: 150ms;
     transition-timing-function: ease-in-out;
@@ -1149,7 +1166,6 @@ const downloadExcel = () => {
         display: flex;
         flex-direction: column;
         gap: 1rem;
-
     }
 
     .page-info {

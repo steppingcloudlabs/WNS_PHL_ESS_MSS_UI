@@ -163,7 +163,7 @@ const manager = computed(() => userStore.getisManager);
         </div>
         
              <div v-if="notification.visible" :class="[
-                'fixed z-[99999] top-10 right-10 px-4 py-2 rounded shadow-lg text-white',
+                'fixed z-[9999999] top-10 right-10 px-4 py-2 rounded shadow-lg text-white',
                 notification.type === 'success' ? 'bg-green-500' : 'bg-red-500'
             ]">
                 {{ notification.message }}

@@ -353,7 +353,11 @@ const showNotification = (message, type) => {
     }, 3000);
 };
 
-
+const formatDisplayDate = (date) => {
+    if (!date) return '';
+    // Format the date as "Day, Month Date, Year" (e.g., "Monday, January 15, 2023")
+    return moment(date).format('dddd, MMMM D, YYYY');
+};
 // shift update 
 const handleShiftClick = async (item) => {
     startDate.value = item.startDate;
@@ -833,6 +837,10 @@ const downloadExcel = () => {
                                     <div class="bg-white rounded-lg p-6 w-96 shadow-xl">
                                         
                                         <h3 class="text-lg font-semibold mb-4">Update Shift</h3>
+
+                                        <div class="mb-2 text-sm font-medium text-gray-700 border border-gray-200 py-1">
+            Updating shift for: <span class="font-semibold">{{ formatDisplayDate(startDate) }}</span>
+        </div>
 
                                         <div v-if="loadingShifts" class="flex justify-center items-center mb-4">
                                             <svg class="animate-spin h-6 w-6 text-orange-500"

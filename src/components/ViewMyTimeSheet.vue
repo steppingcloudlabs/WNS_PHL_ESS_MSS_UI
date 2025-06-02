@@ -24,8 +24,8 @@ const sevenDaysAgo = new Date(currentDate);
 sevenDaysAgo.setDate(currentDate.getDate() - 7);
 
 
-    const startOfPrevMonth = moment().startOf('month').format('YYYY-MM-DD');
-    const endOfPrevMonth = moment().format('YYYY-MM-DD');
+const startOfPrevMonth = moment().startOf('month').format('YYYY-MM-DD');
+const endOfPrevMonth = moment().format('YYYY-MM-DD');
 
 const notification = ref({
     message: '',
@@ -66,9 +66,11 @@ const reserDateFilter = async () => {
    
     
        const response =  await userStore.fetchTimesheet(null, startOfPrevMonth, endOfPrevMonth);
-       if(!response.success){
-        loading.value = false;
-        showNotification(res.message, 'error');
+        showNotification("response.message", 'error');
+       if(!response){
+            loading.value = false;
+            const errorMessage = response.message || 'An error occurred while fetching timesheet data';
+            showNotification(errorMessage, 'error');
        }
 
         // console.log(response)
@@ -82,41 +84,41 @@ const reserDateFilter = async () => {
 };
 
 const dateSearch = async () => {
-
     fromDate.value = fd.value;
     toDate.value = td.value;
-
     if (!fromDate.value || !toDate.value) {
         alert('Please select both dates');
         return;
     }
 
-    const diffDays = toDate.value - fromDate.value;
+    // const diffDays = toDate.value - fromDate.value;
 
-if (diffDays < 7 || diffDays > 31) {
-        alert('Please select a date range between 7 and 30 days');
-        return;
-    }
-    if (fromDate.value > toDate.value) {
-        alert('From date cannot be after To date');
-        await reserDateFilter();
-        return;
-    }
+    // if (diffDays < 7 || diffDays > 31) {
+    //     alert('Please select a date range between 7 and 30 days');
+    //     return;
+    // }
+    // if (fromDate.value > toDate.value) {
+    //     alert('From date cannot be after To date');
+    //     await reserDateFilter();
+    //     return;
+    // }
 
-    const employeeIds = selectedEmployees.value.map(emp => emp.userId);
-    loading.value = true;
+        const employeeIds = selectedEmployees.value.map(emp => emp.userId);
+        loading.value = true;
 
    
         let response;
         if (employeeIds.length === 0) {
+
             response = await userStore.fetchTimesheet(null, fromDate.value, toDate.value);
         } else {
             response = await userStore.fetchTimesheet(employeeIds, fromDate.value, toDate.value);
         }
 
-        if(!response.success){
+        if(!response){
             loading.value = false;
-            showNotification(res.message, 'error');
+            const errorMessage = response.message || 'An error occurred while fetching timesheet data';
+            showNotification(errorMessage, 'error');
        }
        else{
         loading.value = false;
@@ -259,6 +261,7 @@ const manager = computed(() => userStore.getisManager);
                 <EmployeeTimesheetDetails />
             </div>
         </div>
+
     </div>
 </template>
 

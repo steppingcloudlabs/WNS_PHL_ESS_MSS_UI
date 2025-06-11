@@ -18,6 +18,7 @@ export const useUserStore = defineStore('user', {
     managerEmail: '',
     isManager: false,
     workscheduleCode:"",
+    showMealAndTransport:false,
     reportees: [],
     TimesheetData : [],
 

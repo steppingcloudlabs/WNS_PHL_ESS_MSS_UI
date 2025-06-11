@@ -106,7 +106,6 @@ const getRegStatus = (item) => {
     return '-';
 };
 
-
 // -------------------------------COLUMS CONTROLS
 const columns = ref([
     // { key: 'srNo', label: 'Sr.No', visible: true },

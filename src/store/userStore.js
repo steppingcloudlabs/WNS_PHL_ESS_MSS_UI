@@ -84,8 +84,10 @@ async fetchTimesheet(USERIds = null, startDate = null, endDate = null) {
       }
     });
 
-    if (response.status === 200) {
-      // console.log("response: ",response)
+    console.log("error mess: ", response.data.status);
+
+    if (response.data.status == 200) {
+      
       
       const filteredData = response.data.result.filter(entry => {
         if (!entry.startDate) return false;
@@ -104,14 +106,20 @@ async fetchTimesheet(USERIds = null, startDate = null, endDate = null) {
     };
     }
   } catch (error) {
-    console.error("Failed to fetch timesheet:", error);
+    let message = 'Unknown error occurred';
+    if (error.response && error.response.data) {
+      message = error.response.data?.result?.[0]?.message || error.response.data.message || message;
+    } else if (error.message) {
+      message = error.message;
+    }
+
     return {
-      success:false,
-      message: response.data?.result?.[0]?.message || 'Unknown error occurred'
+      success: false,
+      message :message
     };
+  
   }
-}
-,
+},
 
     async  updateShift(loggedInUserId, startDate, workSchedule,  tempTimeExternalCode) {
   

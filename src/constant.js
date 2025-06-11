@@ -8,7 +8,11 @@ export default {
     isTest: true, // for test space only, this should be true while deploying to test space
     isProd: false, // for prod space only, and while deploying to the prod
 
-    version: "0.5.4",
-    lastBuild: "29-05-2025"
+    version: "0.5.7",
+    lastBuild: "11-06-2025"
+    //Excess OT developed 
+
+    // version: "0.5.4",
+    // lastBuild: "29-05-2025"
 
 };

@@ -130,6 +130,8 @@ const columns = ref([
     { key: "UCH_Status", label: "UCH Status", visible: false },
     { key: 'OTHourAndMin', label: 'OT Hours', visible: true },
     { key: 'OTHourAndMin_Breakup', label: 'OT Hours _Breakup', visible: false },
+    { key: 'ExcessOT_HrAndMin', label: 'Excess OT Hours', visible: true },
+    { key: 'ExcessOT_HrAndMin_Breakup', label: 'Excess OT Hours _Breakup', visible: false },
     { key: 'OTStatus', label: 'OT Status', visible: true },
     { key: 'ND1', label: 'ND1', visible: true },
     { key: "ND1_Breakup", label: "ND1 Breakup", visible: false },
@@ -790,6 +792,22 @@ const downloadExcel = () => {
         {{ item[column.key] || "-" }}
     </span>
 </template>
+<!-- Excess OTHourAndMin (Excess OT Hours) with Breakup and Status -->
+<template v-else-if="column.key === 'ExcessOT_HrAndMin'">
+    <span
+        @click="item.ExcessOT_HrAndMin_Breakup && handleBreakupClick(item.ExcessOT_HrAndMin_Breakup)"
+        :class="[
+            'px-2 py-1 rounded text-xs font-medium inline-block',
+            item.OTStatus.toLowerCase() === 'approved'  ? 'text-green-800' : '',
+            item.OTStatus.toLowerCase() === 'pending_approval' ? 'text-orange-800' : '',
+            item.OTStatus.toLowerCase() === 'rejected'  ? 'text-red-800' : '',
+            item.ExcessOT_HrAndMin_Breakup ? 'cursor-pointer  hover:underline' : ''
+        ]"
+        :title="item.ExcessOT_HrAndMin_Breakup ? 'Show Excess OT Hours Breakup' : ''"
+    >
+        {{ item[column.key] || "-" }}
+    </span>
+</template>
 
  <!-- TCH_Value with Breakup and Status -->
 <template v-else-if="column.key === 'TCH_Value'">
@@ -908,7 +926,7 @@ const downloadExcel = () => {
                             </template>
 
                             <!-- ND1, ND2, ExcessND1, ExcessND2 -->
-                            <template v-else-if="['ND1','OTHourAndMin', 'ND2', 'ExcessND1', 'ExcessND2'].includes(column.key)">
+                            <template v-else-if="['ND1','OTHourAndMin', 'ExcessOT_HrAndMin' , 'ND2', 'ExcessND1', 'ExcessND2'].includes(column.key)">
                                 <span @click="handleBreakupClick(item[`${column.key}_Breakup`])"
                                     class="cursor-pointer text-black-500 hover:underline">
                                     {{ item[column.key] || "-" }}

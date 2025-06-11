@@ -66,7 +66,7 @@ const reserDateFilter = async () => {
    
     
        const response =  await userStore.fetchTimesheet(null, startOfPrevMonth, endOfPrevMonth);
-        showNotification("response.message", 'error');
+       
        if(!response){
             loading.value = false;
             const errorMessage = response.message || 'An error occurred while fetching timesheet data';
@@ -122,9 +122,7 @@ const dateSearch = async () => {
        }
        else{
         loading.value = false;
-       }
-
-         
+       }   
     
 };
 
@@ -153,6 +151,7 @@ const removeEmployee = (userId) => {
 };
 
 const manager = computed(() => userStore.getisManager);
+
 </script>
 
 <template>

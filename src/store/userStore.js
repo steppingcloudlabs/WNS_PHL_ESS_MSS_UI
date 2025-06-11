@@ -18,7 +18,7 @@ export const useUserStore = defineStore('user', {
     managerEmail: '',
     isManager: false,
     workscheduleCode:"",
-    showMealAndTransport:false,
+    IsRoleBandA:true,
     reportees: [],
     TimesheetData : [],
 
@@ -35,7 +35,8 @@ export const useUserStore = defineStore('user', {
     getisManager:(state)=>state.isManager,
     reporteeNames : (state) => state.reportees.map(r => r.defaultFullName).filter(name => !!name),
     timesheetData: (state) => state.TimesheetData || [],
-    getManagerWorkSchedule: (state)=>state.workscheduleCode
+    getManagerWorkSchedule: (state)=>state.workscheduleCode,
+    getIsRoleBandA:(state)=>state.IsRoleBandA
 
   },
 

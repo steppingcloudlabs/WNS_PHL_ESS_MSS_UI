@@ -18,7 +18,7 @@ export const useUserStore = defineStore('user', {
     managerEmail: '',
     isManager: false,
     workscheduleCode:"",
-    IsRoleBandA:true,
+    IsRoleBandA:false,
     reportees: [],
     TimesheetData : [],
 
@@ -30,7 +30,8 @@ export const useUserStore = defineStore('user', {
       name: state.fullName,
       email: state.email,
       department: state.department,
-      isManager: state.isManager
+      isManager: state.isManager,
+      IsRoleBandA:state.IsRoleBandA
     }),
     getisManager:(state)=>state.isManager,
     reporteeNames : (state) => state.reportees.map(r => r.defaultFullName).filter(name => !!name),
@@ -55,6 +56,7 @@ export const useUserStore = defineStore('user', {
       this.managerName = data.managerdefaultFullName
       this.managerEmail = data.manageremail
       this.isManager = data.isManager
+      this.IsRoleBandA = data.IsRoleBandA
       this.reportees = data.Reportees || []
       
     },
@@ -200,9 +202,6 @@ async fetchTimesheet(USERIds = null, startDate = null, endDate = null) {
           };
       }
   },
-
-  
-      
       setTimeSheet(data) {
         // Handle both direct array and { result: array } responses
         const timesheetData = Array.isArray(data) ? data : 

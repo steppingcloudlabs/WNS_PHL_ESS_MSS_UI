@@ -105,7 +105,8 @@ const getRegStatus = (item) => {
 };
 
 // -------------------------------COLUMS CONTROLS
-const mt = computed(() => userStore.IsRoleBandA); //for Meal and Transport 
+const mt = computed(() => userStore.getIsRoleBandA); //for Meal and Transport
+console.log("mt: ", mt.value) 
 const columns = ref([
     // { key: 'srNo', label: 'Sr.No', visible: true },
     { key: 'userId', label: 'User ID', visible: true },
@@ -225,7 +226,7 @@ const toggleColumn = (column) => {
 const visibleColumns = computed(() => {
   return columns.value.filter(col => {
     if (['Meal', 'Transport'].includes(col.key)) {
-      return mt.value && col.visible;
+      return !mt.value && col.visible;
     }
     return col.visible;
   });
@@ -492,17 +493,28 @@ const hoveredStatusItem = ref(null);
 const tooltipPosition = ref({ x: 0, y: 0 });
 
 const showStatusTooltip = (event, item, key) => {
+    if(key==="TCH_Value"){
+        key = "TCH_Status";
+    }
 
-    console.log("show tooltip key: ", key)
-    console.log("show tooltip key: ", item)
+    if (key==="UCH_Value") {
+        key="UCH_Status";
+    }
     
-    const approvedKey = `${key}ApprovedBy`;
-    const modifiedKey = `${key}LastModifiedBy`;
+    const approvedKey = `${key}LastModifiedBy`;
+    const nameKey = `${key}LastModifiedByName`;
+    const modifiedKey = `${key}LastModifiedAt`;
+
+    const approver = item[approvedKey];
+    const approverName = item[nameKey];
+    const modifiedDate = item[modifiedKey];
 
     hoveredStatusItem.value = {
-        label: key,  // This is used for the tooltip label
-        approvedBy: item.approvedKey || '-',
-        lastModifiedBy: item.modifiedKey || '-',
+        label: key,
+        approvedBy: approver
+            ? `${approver}${approverName ? ` (${approverName})` : ''}`
+            : '-',
+        lastModifiedBy: modifiedDate || '-',
     };
 
     const tooltipWidth = 200;
@@ -514,7 +526,6 @@ const showStatusTooltip = (event, item, key) => {
     };
 };
 
-
 const hideStatusTooltip = () => {
     hoveredStatusItem.value = null;
 };
@@ -522,8 +533,6 @@ const hideStatusTooltip = () => {
 </script>
 
 <template>
-
-
 
     <div :class="{ ' fixed inset-0 z-50 bg-white overflow-auto': isFullscreen }" class="shadow-md rounded-lg mx-auto">
         <div class="md:w-full p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -670,9 +679,9 @@ const hideStatusTooltip = () => {
                         <template v-if="column.key === 'RegStatus'">
                             <span :class="[
                                 'px-2 py-1 rounded-full text-xs font-medium inline-block',
-                                row[column.key] === 'APPROVED' ? 'bg-green-100 text-green-800' : '',
-                                row[column.key] === 'PENDING_APPROVAL' ? 'bg-yellow-100 text-yellow-800' : '',
-                                row[column.key] === 'REJECTED' ? 'bg-red-100 text-red-800' : ''
+                                getRegStatus(row).toLowerCase() == 'approved' ? 'bg-green-100 text-green-800' : '',
+                                getRegStatus(row).toLowerCase() == 'pending_approval' ? 'bg-yellow-100 text-yellow-800' : '',
+                                getRegStatus(row).toLowerCase() == 'rejected' ? 'bg-red-100 text-red-800' : ''
                             ]">
                                 {{ getRegStatus(row) }}
                             </span>
@@ -1025,8 +1034,7 @@ const hideStatusTooltip = () => {
 
                             <template v-else-if="column.key === 'leaveStatus'">
                                 <span 
-                                @mouseenter="showStatusTooltip($event, item, column.key)"
-                                @mouseleave="hideStatusTooltip"
+                               
                                 :class="[
                                     'px-2 py-1 rounded text-xs font-medium inline-block',
                                     item[column.key] === 'APPROVED' || item[column.key] === 'Approved' ? 'bg-green-100 text-green-800' : '',
@@ -1102,12 +1110,16 @@ const hideStatusTooltip = () => {
         </div>
 
 <div v-if="hoveredStatusItem" 
-     class="fixed z-[99999999999] bg-white border border-gray-300 rounded-md p-3 text-xs"
+     class="fixed z-[99999999999] bg-white border border-yellow-800 rounded-md p-3 text-xs"
      :style="{ top: `${tooltipPosition.y}px`, left: `${tooltipPosition.x}px` }">
+     
+     <div class="absolute  -bottom-3 left-[40%] translate-x-[-50%] w-0 h-0 border-red-500 border-l-8 border-r-8 border-t-12 border-l-transparent      border-r-transparent border-t-yellow-800">   
+     </div>
+
     <div class="grid grid-cols-2 gap-2">
         <span class="font-medium"> Approved By:</span>
         <span>{{ hoveredStatusItem.approvedBy }}</span>
-        <span class="font-medium">Last Modified By:</span>
+        <span class="font-medium">Last Modified At:</span>
         <span>{{ hoveredStatusItem.lastModifiedBy }}</span>
     </div>
 </div>

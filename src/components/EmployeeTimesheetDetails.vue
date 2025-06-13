@@ -521,8 +521,8 @@ const showStatusTooltip = (event, item, key) => {
     const tooltipHeight = 80;
 
     tooltipPosition.value = {
-        x: event.clientX - tooltipWidth / 2,
-        y: event.clientY - tooltipHeight - 10,
+        x: event.clientX - (tooltipWidth -5) / 2,
+        y: event.clientY - tooltipHeight - 5,
     };
 };
 
@@ -898,12 +898,12 @@ const hideStatusTooltip = () => {
                             <!-- shift id and popup for update -->
                             <template v-else-if="column.key === 'ShiftId'">
                                 <span @click="handleShiftClick(item)"
-                                    class="cursor-pointer hover:text-orange-500 hover:underline">
+                                    class=" cursor-pointer hover:text-orange-500 hover:underline">
                                     {{ item[column.key] || "-" }}
                                 </span>
                                 <div v-if="showShiftModal"
                                     class="fixed inset-0 bg-opacity-30 flex items-center justify-center z-[9999]">
-                                    <div class="bg-white rounded-lg p-6 w-96 shadow-xl">
+                                    <div class="bg-white rounded-lg p-6 w-96 border border-black">
                                         
                                         <h3 class="text-lg font-semibold mb-4">Update Shift</h3>
 
@@ -967,8 +967,7 @@ const hideStatusTooltip = () => {
                             <!-- OT status -->
                             <template v-else-if="column.key === 'OTStatus'">
                                 <span 
-                                @mouseenter="showStatusTooltip($event, item, column.key)"
-                                @mouseleave="hideStatusTooltip"
+                                
                                 :class="[
                                     'px-2 py-1 rounded text-xs font-medium inline-block',
                                     item[column.key] === 'APPROVED' || item[column.key] === 'Approved' ? 'bg-green-100 text-green-800' : '',
@@ -1109,13 +1108,15 @@ const hideStatusTooltip = () => {
             </div>
         </div>
 
-<div v-if="hoveredStatusItem" 
-     class="fixed z-[99999999999] bg-white border border-yellow-800 rounded-md p-3 text-xs"
-     :style="{ top: `${tooltipPosition.y}px`, left: `${tooltipPosition.x}px` }">
+        <!-- hover Status =>  Meal, Transport, UCH, TCH, RegStatus -->
+<div 
+v-if="hoveredStatusItem" 
+     class="fixed z-[9999999999999] h-[110px] w-[250px] bg-white tooltip-shape rounded-md p-3 text-xs "
+     :style="{ 
+         top: `${tooltipPosition.y-30}px`, 
+         left: `${tooltipPosition.x-20}px`,
+     }">
      
-     <div class="absolute  -bottom-3 left-[40%] translate-x-[-50%] w-0 h-0 border-red-500 border-l-8 border-r-8 border-t-12 border-l-transparent      border-r-transparent border-t-yellow-800">   
-     </div>
-
     <div class="grid grid-cols-2 gap-2">
         <span class="font-medium"> Approved By:</span>
         <span>{{ hoveredStatusItem.approvedBy }}</span>
@@ -1173,13 +1174,16 @@ const hideStatusTooltip = () => {
 
     </div>
 
-    
-
 </template>
 
 
 
 <style scoped>
+
+.tooltip-shape {
+    background-color: #b2b1b0;
+    clip-path: polygon(0% 0%, 100% 0%, 100% 80%, 59% 82%, 56% 100%, 48% 82%, 0 82%);
+}
 /* Improved scrollbar styling */
 .table-container {
     overflow-x: auto;
@@ -1206,9 +1210,7 @@ thead .sticky {
     top: 0;
     right: 0;
     bottom: 0;
-    width: 1px;
-    
-    
+    width: 1px;   
 }
 
 table {

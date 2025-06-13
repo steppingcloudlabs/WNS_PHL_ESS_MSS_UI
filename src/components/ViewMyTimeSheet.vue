@@ -53,8 +53,6 @@ const td = ref(endOfPrevMonth);
 const fromDate = ref('');
 const toDate = ref('');
 
-console.log("fd, td: ", fd.value, td.value)
-
 const reserDateFilter = async () => {
     const startOfPrevMonth = moment().startOf('month').format('YYYY-MM-DD');
     const endOfPrevMonth = moment().format('YYYY-MM-DD');
@@ -66,7 +64,7 @@ const reserDateFilter = async () => {
    
     
        const response =  await userStore.fetchTimesheet(null, startOfPrevMonth, endOfPrevMonth);
-        showNotification("response.message", 'error');
+       
        if(!response){
             loading.value = false;
             const errorMessage = response.message || 'An error occurred while fetching timesheet data';
@@ -122,9 +120,7 @@ const dateSearch = async () => {
        }
        else{
         loading.value = false;
-       }
-
-         
+       }   
     
 };
 
@@ -153,6 +149,7 @@ const removeEmployee = (userId) => {
 };
 
 const manager = computed(() => userStore.getisManager);
+
 </script>
 
 <template>
@@ -175,7 +172,7 @@ const manager = computed(() => userStore.getisManager);
         <div class="w-full px-4 sm:px-6 lg:px-8 mx-auto">
             <div class="text-lg font-semibold mb-2">View My Timesheet</div>
             
-
+<!-- multiselect if manager -->
             <div class="flex-1 min-w-0 my-4" v-if="manager">
                 <label class="block mb-2 text-gray-700">Employee Name / ID *</label>
                 <div class="flex flex-wrap gap-2 mb-2">
@@ -218,43 +215,38 @@ const manager = computed(() => userStore.getisManager);
 
             <!-- FILTER SECTION -->
             <div class="mt-6 flex flex-col gap-y-4 text-sm p-4 rounded-xl border border-gray-300 shadow-sm bg-white">
+    <div class="flex justify-between items-center">
+      <div class="font-medium">FILTER</div>
+      <button @click="handleToggleFilter" class="hover:bg-gray-100 p-1 rounded-full transition-colors">
+        <component :is="toggleFilter ? Minus : Plus" class="w-5 h-5" />
+      </button>
+    </div>
 
-                <div class="flex justify-between items-center">
-                    <div class="font-medium">FILTER</div>
-                    <button @click="handleToggleFilter" class="hover:bg-gray-100 p-1 rounded-full transition-colors">
-                        <component :is="toggleFilter ? Minus : Plus" class="w-5 h-5" />
-                    </button>
-                </div>
+    <!-- Add transition here -->
+    <transition name="fade-slide">
+      <div v-show="toggleFilter" class="flex flex-col md:flex-row gap-4 font-semibold">
+        <div class="flex-1 min-w-0">
+          <label class="block mb-2 text-gray-700">From Date</label>
+          <flat-pickr v-model="fd" placeholder="from date" class="input border border-gray-300 rounded-md p-1" />
+        </div>
 
-                <div v-show="toggleFilter" class="flex flex-col md:flex-row gap-4 font-semibold">
+        <div class="flex-1 min-w-0">
+          <label class="block mb-2 text-gray-700">To Date</label>
+          <div class="flex items-center gap-x-2">
+            <flat-pickr v-model="td" placeholder="to date" class="input border border-gray-300 rounded-md p-1" />
 
-                    <div class="flex-1 min-w-0 ">
-                        <label class="block mb-2 text-gray-700">from Date</label>
+            <button @click="dateSearch"
+              class="p-2 hover:bg-amber-600 bg-amber-500 text-white rounded-md transition-colors">
+              <Search class="w-5 h-5" />
+            </button>
 
-                        <flat-pickr v-model="fd"  placeholder="from date"
-                            class="input border border-gray-300 rounded-md p-1" />
-
-                    </div>
-
-                    <div class="flex-1 min-w-0">
-                        <label class="block mb-2 text-gray-700">to Date</label>
-                        <div class="flex items-center gap-x-2">
-
-                            <flat-pickr v-model="td"  placeholder="to date"
-                                class="input border border-gray-300 rounded-md p-1"/>
-
-                            <button @click="dateSearch"
-                                class="p-2 hover:bg-amber-600 bg-amber-500 text-white rounded-md transition-colors">
-                                <Search class="w-5 h-5"/>
-                            </button>
-
-                            <button @click="reserDateFilter" class="p-2 hover:bg-gray-100 rounded-md transition-colors">
-                                <RefreshCw class="w-5 h-5"/>
-                            </button>
-                        </div>
-
-                    </div>
-                </div>
+            <button @click="reserDateFilter" class="p-2 hover:bg-gray-100 rounded-md transition-colors">
+              <RefreshCw class="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      </div>
+    </transition>
             </div>
 
             <div class="mt-6 w-full">
@@ -266,6 +258,19 @@ const manager = computed(() => userStore.getisManager);
 </template>
 
 <style>
+
+.fade-slide-enter-active, .fade-slide-leave-active {
+  transition: all 0.3s ease;
+}
+.fade-slide-enter-from, .fade-slide-leave-to {
+  opacity: 0.5;
+  transform: translateY(-10px);
+}
+.fade-slide-enter-to, .fade-slide-leave-from {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 input[type="date"] {
     appearance: none;
     -webkit-appearance: none;

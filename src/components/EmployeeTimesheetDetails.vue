@@ -6,11 +6,9 @@ import { ref, computed, onMounted, onUnmounted, watch, } from 'vue';
 // import { updateShift } from '../store/userStore';
 import { useUserStore } from '../store/userStore';
 
-
-
 const userStore = useUserStore();
 
-// Access data through computed property
+// get timeSheet Data
 const timesheetData = computed(() => {
   changePage(1);
   return userStore.timesheetData;
@@ -107,6 +105,8 @@ const getRegStatus = (item) => {
 };
 
 // -------------------------------COLUMS CONTROLS
+const mt = computed(() => userStore.getIsRoleBandA); //for Meal and Transport
+console.log("mt: ", mt.value) 
 const columns = ref([
     // { key: 'srNo', label: 'Sr.No', visible: true },
     { key: 'userId', label: 'User ID', visible: true },
@@ -224,7 +224,12 @@ const toggleColumn = (column) => {
 };
 
 const visibleColumns = computed(() => {
-    return columns.value.filter(col => col.visible);
+  return columns.value.filter(col => {
+    if (['Meal', 'Transport'].includes(col.key)) {
+      return !mt.value && col.visible;
+    }
+    return col.visible;
+  });
 });
 
 const toggleFullscreen = () => {
@@ -262,7 +267,6 @@ const changeRowsPerPage = (rows) => {
     rowsPerPage.value = rows;
     currentPage.value = 1;
 };
-
 
 // sorting by row
 const sortBy = ref('');
@@ -347,7 +351,6 @@ const showNotification = (message, type) => {
         type,
         visible: true,
     };
-
     //  hide the notification after 3 seconds
     setTimeout(() => {
         notification.value.visible = false;
@@ -484,11 +487,52 @@ const downloadExcel = () => {
     URL.revokeObjectURL(url);
 };
 
+
+// status Hover popup 
+const hoveredStatusItem = ref(null);
+const tooltipPosition = ref({ x: 0, y: 0 });
+
+const showStatusTooltip = (event, item, key) => {
+    if(key==="TCH_Value"){
+        key = "TCH_Status";
+    }
+
+    if (key==="UCH_Value") {
+        key="UCH_Status";
+    }
+    
+    const approvedKey = `${key}LastModifiedBy`;
+    const nameKey = `${key}LastModifiedByName`;
+    const modifiedKey = `${key}LastModifiedAt`;
+
+    const approver = item[approvedKey];
+    const approverName = item[nameKey];
+    const modifiedDate = item[modifiedKey];
+
+    hoveredStatusItem.value = {
+        label: key,
+        approvedBy: approver
+            ? `${approver}${approverName ? ` (${approverName})` : ''}`
+            : '-',
+        lastModifiedBy: modifiedDate || '-',
+    };
+
+    const tooltipWidth = 200;
+    const tooltipHeight = 80;
+
+    tooltipPosition.value = {
+        x: event.clientX - (tooltipWidth -5) / 2,
+        y: event.clientY - tooltipHeight - 5,
+    };
+};
+
+const hideStatusTooltip = () => {
+    hoveredStatusItem.value = null;
+};
+
 </script>
 
 <template>
-
-
 
     <div :class="{ ' fixed inset-0 z-50 bg-white overflow-auto': isFullscreen }" class="shadow-md rounded-lg mx-auto">
         <div class="md:w-full p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -532,7 +576,7 @@ const downloadExcel = () => {
 
                         <!-- Column Selector Dropdown -->
                         <div v-if="showColumnSelector"
-                            class="absolute md:right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                            class="absolute md:right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 z-[999999]">
                             <div class="p-4">
                                 <h3 class="text-sm font-semibold mb-2">Show/Hide Columns</h3>
                                 <div class="space-y-2 max-h-80 overflow-y-auto">
@@ -635,9 +679,9 @@ const downloadExcel = () => {
                         <template v-if="column.key === 'RegStatus'">
                             <span :class="[
                                 'px-2 py-1 rounded-full text-xs font-medium inline-block',
-                                row[column.key] === 'APPROVED' ? 'bg-green-100 text-green-800' : '',
-                                row[column.key] === 'PENDING_APPROVAL' ? 'bg-yellow-100 text-yellow-800' : '',
-                                row[column.key] === 'REJECTED' ? 'bg-red-100 text-red-800' : ''
+                                getRegStatus(row).toLowerCase() == 'approved' ? 'bg-green-100 text-green-800' : '',
+                                getRegStatus(row).toLowerCase() == 'pending_approval' ? 'bg-yellow-100 text-yellow-800' : '',
+                                getRegStatus(row).toLowerCase() == 'rejected' ? 'bg-red-100 text-red-800' : ''
                             ]">
                                 {{ getRegStatus(row) }}
                             </span>
@@ -727,9 +771,10 @@ const downloadExcel = () => {
                             :class="{
                                         'sticky font-medium left-0 bg-gray-200 z-20': column.key === 'startDate',
                                         'w-auto font-medium min-w-[50px]': ['ShiftId', 'ND1', 'ND2', 'Meal', 'Transport'].includes(column.key),
+                                        // 'w-auto font-medium min-w-[50px]': ['Meal', 'Transport'].includes(column.key) && mt.value,
                                         'w-auto font-medium min-w-[50px]': ['Tardiness', 'Undertime', 'OTHours'].includes(column.key),
                                         'w-auto font-medium min-w-[50px]': ['shiftDate', 'inTime', 'outTime'].includes(column.key),
-                                        'w-auto font-medium min-w-[50px]': ['attendenceStatus', 'RegStatus'].includes(column.key)
+                                        'w-auto font-medium min-w-[50px]': ['attendenceStatus', 'RegStatus'].includes(column.key) 
                                     }"  @click="toggleSort(column.key)">
                             
                             <div class="flex items-center justify-between gap-2 font-medium">
@@ -759,7 +804,10 @@ const downloadExcel = () => {
                                     </template>
                             <!-- attendence Status -->
                             <template v-else-if="column.key === 'RegStatus'">
-                                <span :class="[
+                                <span
+                                @mouseenter="showStatusTooltip($event, item, column.key)"
+                                @mouseleave="hideStatusTooltip"
+                                :class="[
                                     'px-2 py-1 text-center text-xs font-medium inline-block',
                                     getRegStatus(item).toLowerCase() === 'approved' ? 'bg-green-100 text-green-800' : '',
                                     getRegStatus(item).toLowerCase() === 'pending_approval' ? 'bg-yellow-100 text-yellow-800' : '',
@@ -811,6 +859,8 @@ const downloadExcel = () => {
  <!-- TCH_Value with Breakup and Status -->
 <template v-else-if="column.key === 'TCH_Value'">
     <span
+          @mouseenter="showStatusTooltip($event, item, column.key)"
+          @mouseleave="hideStatusTooltip"
         @click="item.TCH_Value_Breakup && handleBreakupClick(item.TCH_Value_Breakup)"
         :class="[
             'px-2 py-1 rounded text-xs font-medium inline-block',
@@ -828,6 +878,8 @@ const downloadExcel = () => {
 <!-- UCH_Value with Breakup and Status -->
 <template v-else-if="column.key === 'UCH_Value'">
     <span
+    @mouseenter="showStatusTooltip($event, item, column.key)"
+                                @mouseleave="hideStatusTooltip"
         @click="item.UCH_Value_Breakup && handleBreakupClick(item.UCH_Value_Breakup)"
         :class="[
             'px-2 py-1 rounded text-xs font-medium inline-block',
@@ -846,12 +898,12 @@ const downloadExcel = () => {
                             <!-- shift id and popup for update -->
                             <template v-else-if="column.key === 'ShiftId'">
                                 <span @click="handleShiftClick(item)"
-                                    class="cursor-pointer hover:text-orange-500 hover:underline">
+                                    class=" cursor-pointer hover:text-orange-500 hover:underline">
                                     {{ item[column.key] || "-" }}
                                 </span>
                                 <div v-if="showShiftModal"
                                     class="fixed inset-0 bg-opacity-30 flex items-center justify-center z-[9999]">
-                                    <div class="bg-white rounded-lg p-6 w-96 shadow-xl">
+                                    <div class="bg-white rounded-lg p-6 w-96 border border-black">
                                         
                                         <h3 class="text-lg font-semibold mb-4">Update Shift</h3>
 
@@ -914,7 +966,9 @@ const downloadExcel = () => {
  
                             <!-- OT status -->
                             <template v-else-if="column.key === 'OTStatus'">
-                                <span :class="[
+                                <span 
+                                
+                                :class="[
                                     'px-2 py-1 rounded text-xs font-medium inline-block',
                                     item[column.key] === 'APPROVED' || item[column.key] === 'Approved' ? 'bg-green-100 text-green-800' : '',
                                     item[column.key] === 'PENDING_APPROVAL' ? 'bg-orange-100 text-orange-800' : '',
@@ -963,7 +1017,7 @@ const downloadExcel = () => {
                                         </button>
                                     </div>
                                 </div>
-                            </div>
+                        </div>
 
                             <!-- leave || status -->
                             <template v-else-if="column.key === 'leave'">
@@ -978,7 +1032,9 @@ const downloadExcel = () => {
                             </template>
 
                             <template v-else-if="column.key === 'leaveStatus'">
-                                <span :class="[
+                                <span 
+                               
+                                :class="[
                                     'px-2 py-1 rounded text-xs font-medium inline-block',
                                     item[column.key] === 'APPROVED' || item[column.key] === 'Approved' ? 'bg-green-100 text-green-800' : '',
                                     item[column.key] === 'PENDING' || item[column.key] === 'Pending' ? 'bg-orange-100 text-orange-800' : '',
@@ -990,7 +1046,11 @@ const downloadExcel = () => {
 
                             <!-- meal and trasnport -->
                             <template v-else-if="column.key === 'Meal' || column.key === 'Transport'">
-                                <span :class="[
+                                <div v-if="mt">
+                                    <span 
+                                    @mouseenter="showStatusTooltip($event, item, column.key)"
+                                    @mouseleave="hideStatusTooltip"
+                                    :class="[
                                     'px-2 py-1 rounded text-xs font-medium inline-block',
                                     // Status-based background colors
                                     item[column.key] === 'APPROVED' ? 'bg-green-100 text-green-800' : '',
@@ -1002,9 +1062,10 @@ const downloadExcel = () => {
                                     </div>
                                    
                                 </span>
+                                </div>
                             </template>
-
-
+                            
+                            <!-- inTime and outTime -->
                             <template v-else-if="column.key === 'inTime' || column.key === 'outTime'">
                                 {{ formatISODuration(item[column.key] || "-") }}
                             </template>
@@ -1046,6 +1107,24 @@ const downloadExcel = () => {
             </table>
             </div>
         </div>
+
+        <!-- hover Status =>  Meal, Transport, UCH, TCH, RegStatus -->
+<div 
+v-if="hoveredStatusItem" 
+     class="fixed z-[9999999999999] h-[110px] w-[250px] bg-white tooltip-shape rounded-md p-3 text-xs "
+     :style="{ 
+         top: `${tooltipPosition.y-30}px`, 
+         left: `${tooltipPosition.x-20}px`,
+     }">
+     
+    <div class="grid grid-cols-2 gap-2">
+        <span class="font-medium"> Approved By:</span>
+        <span>{{ hoveredStatusItem.approvedBy }}</span>
+        <span class="font-medium">Last Modified At:</span>
+        <span>{{ hoveredStatusItem.lastModifiedBy }}</span>
+    </div>
+</div>
+
 
         <!-- pagination handle -->
         <div class="flex items-center justify-between px-4 py-3 bg-white border-t border-gray-200">
@@ -1100,6 +1179,11 @@ const downloadExcel = () => {
 
 
 <style scoped>
+
+.tooltip-shape {
+    background-color: #b2b1b0;
+    clip-path: polygon(0% 0%, 100% 0%, 100% 80%, 59% 82%, 56% 100%, 48% 82%, 0 82%);
+}
 /* Improved scrollbar styling */
 .table-container {
     overflow-x: auto;
@@ -1126,9 +1210,7 @@ thead .sticky {
     top: 0;
     right: 0;
     bottom: 0;
-    width: 1px;
-    
-    
+    width: 1px;   
 }
 
 table {

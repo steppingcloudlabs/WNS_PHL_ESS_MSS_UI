@@ -500,6 +500,8 @@ const showStatusTooltip = (event, item, key) => {
     if (key==="UCH_Value") {
         key="UCH_Status";
     }
+
+    console.log("Key hovered: ", key);
     
     const approvedKey = `${key}LastModifiedBy`;
     const nameKey = `${key}LastModifiedByName`;
@@ -826,6 +828,7 @@ const hideStatusTooltip = () => {
 <!-- OTHourAndMin (OT Hours) with Breakup and Status -->
 <template v-else-if="column.key === 'OTHourAndMin'">
     <span
+        
         @click="item.OTHourAndMin_Breakup && handleBreakupClick(item.OTHourAndMin_Breakup)"
         :class="[
             'px-2 py-1 rounded text-xs font-medium inline-block',
@@ -967,7 +970,8 @@ const hideStatusTooltip = () => {
                             <!-- OT status -->
                             <template v-else-if="column.key === 'OTStatus'">
                                 <span 
-                                
+                                @mouseenter="showStatusTooltip($event, item, column.key)"
+                                @mouseleave="hideStatusTooltip"
                                 :class="[
                                     'px-2 py-1 rounded text-xs font-medium inline-block',
                                     item[column.key] === 'APPROVED' || item[column.key] === 'Approved' ? 'bg-green-100 text-green-800' : '',
@@ -1033,6 +1037,8 @@ const hideStatusTooltip = () => {
 
                             <template v-else-if="column.key === 'leaveStatus'">
                                 <span 
+                                @mouseenter="showStatusTooltip($event, item, column.key)"
+                                @mouseleave="hideStatusTooltip"
                                
                                 :class="[
                                     'px-2 py-1 rounded text-xs font-medium inline-block',

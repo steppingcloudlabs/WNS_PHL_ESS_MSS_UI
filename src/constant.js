@@ -8,8 +8,13 @@ export default {
     isTest: true, // for test space only, this should be true while deploying to test space
     isProd: false, // for prod space only, and while deploying to the prod
 
-    version: "0.5.8",
+    version: "0.5.9",
     lastBuild: "13-06-2025"
+    // Approved By and Last modified at
+    // RoleBand A visibility of meal and Transport
+
+    // version: "0.5.8",
+    // lastBuild: "13-06-2025"
     //Excess OT developed 
 
     // version: "0.5.4",

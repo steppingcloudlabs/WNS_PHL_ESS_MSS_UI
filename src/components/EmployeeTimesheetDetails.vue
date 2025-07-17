@@ -364,18 +364,17 @@ const formatDisplayDate = (date) => {
 };
 // shift update 
 const handleShiftClick = async (item) => {
+
+    console.log('Shift Clicked:', item);
     startDate.value = item.startDate;
     tempTimeExternalCode.value = item.tempTimeExternalCode;
     showShiftModal.value = true;
+    
 
     const today = new Date();
-    const diffTime = Math.abs(today - item.startDate);
+    const itemDate = new Date(item.startDate); // ✅ Convert to Date object
+    const diffTime = Math.abs(today - itemDate);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    if (diffDays > 60) {
-        alert('Cannot update shift data older than 60 days');
-        return;
-    }
 
     loadingShifts.value = true; // Start loader
     console.log('Loading Shifts:', loadingShifts.value); // Debugging
@@ -406,10 +405,23 @@ const handleShiftClick = async (item) => {
     }
 };
 
+const isShiftUpdate = (dateStr, userId) => {
+  const today = new Date();
+  const shiftDate = new Date(dateStr);
+  const diffTime = Math.abs(today - shiftDate);
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  if(diffDays> 60) {
+    showNotification('Shift update is allowed only for the last 60 days', 'error');
+  } 
+  return diffDays > 60 || (userId && userId !== LoggedInUserId.value.userId);
+};
+
 
 const shiftupdateLoader = ref(null);
 // shift update function 
 const Shift = async () => {
+
+    
 
      shiftupdateLoader.value = true; 
     const res = await userStore.updateShift(
@@ -900,7 +912,7 @@ const hideStatusTooltip = () => {
 
                             <!-- shift id and popup for update -->
                             <template v-else-if="column.key === 'ShiftId'">
-                                <span @click="handleShiftClick(item)"
+                                <span @click="!isShiftUpdate(item.startDate, item.userId) && handleShiftClick(item)"
                                     class=" cursor-pointer hover:text-orange-500 hover:underline">
                                     {{ item[column.key] || "-" }}
                                 </span>

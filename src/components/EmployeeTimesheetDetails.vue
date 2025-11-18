@@ -1063,25 +1063,27 @@ const hideStatusTooltip = () => {
                             </template>
 
                             <!-- meal and trasnport -->
-                            <template v-else-if="column.key === 'Meal' || column.key === 'Transport'">
-                                <div v-if="mt">
-                                    <span 
-                                    @mouseenter="showStatusTooltip($event, item, column.key)"
-                                    @mouseleave="hideStatusTooltip"
-                                    :class="[
-                                    'px-2 py-1 rounded text-xs font-medium inline-block',
-                                    // Status-based background colors
-                                    item[column.key] === 'APPROVED' ? 'bg-green-100 text-green-800' : '',
-                                    item[column.key] === 'APPLIED' || item[column.key] === 'pending' ? 'bg-orange-100 text-orange-800' : '',
-                                    item[column.key] === 'REJECTED' ? 'bg-red-100 text-red-800' : '',
-                                ]">
-                                    <div>
-                                        {{ item[`${column.key}Hours`] || "-" }}
-                                    </div>
-                                   
-                                </span>
-                                </div>
-                            </template>
+                          <template v-else-if="column.key === 'Meal' || column.key === 'Transport'">
+  <div v-if="mt">
+    <span 
+      @mouseenter="showStatusTooltip($event, item, column.key)"
+      @mouseleave="hideStatusTooltip"
+      :class="[
+        'px-2 py-1 rounded text-xs font-medium inline-block',
+        // Status-based background colors
+        item[column.key] === 'APPROVED' ? 'bg-green-100 text-green-800' : '',
+        item[column.key] === 'APPLIED' || item[column.key] === 'pending' ? 'bg-orange-100 text-orange-800' : '',
+        item[column.key] === 'REJECTED' ? 'bg-red-100 text-red-800' : '',
+      ]">
+      <div>
+        {{ item[`${column.key}Hours`] || "-" }}
+      </div>
+    </span>
+  </div>
+  <div v-else>
+    {{ item[`${column.key}Hours`] || "-" }}
+  </div>
+</template>
                             
                             <!-- inTime and outTime -->
                             <template v-else-if="column.key === 'inTime' || column.key === 'outTime'">

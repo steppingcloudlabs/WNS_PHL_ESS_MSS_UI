@@ -1080,7 +1080,10 @@ const hideStatusTooltip = () => {
       </div>
     </span>
   </div>
-  <div v-else>
+ <div
+  @mouseenter="showStatusTooltip($event, item, column.key)"
+      @mouseleave="hideStatusTooltip"
+  v-else>
     {{ item[`${column.key}Hours`] || "-" }}
   </div>
 </template>

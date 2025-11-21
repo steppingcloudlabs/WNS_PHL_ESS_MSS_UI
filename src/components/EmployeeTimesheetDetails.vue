@@ -5,6 +5,7 @@ import { Download, Expand, ListTree, ToggleLeft, ChevronDown, Trash, ChevronUp, 
 import { ref, computed, onMounted, onUnmounted, watch, } from 'vue';
 // import { updateShift } from '../store/userStore';
 import { useUserStore } from '../store/userStore';
+import { green } from 'vuetify/util/colors';
 
 const userStore = useUserStore();
 
@@ -504,6 +505,32 @@ const downloadExcel = () => {
 const hoveredStatusItem = ref(null);
 const tooltipPosition = ref({ x: 0, y: 0 });
 
+// Get Meal/Transport breakup data from timeValuation
+const getMealTransportBreakup = (item, type) => {
+  if (!item.timeValuation || !Array.isArray(item.timeValuation)) {
+    return null;
+  }
+
+  // Map time valuation types to Meal/Transport
+  const typeMapping = {
+    'Meal': ['PHL_MA_HRS_WD_F_F', 'PHL_MA'], 
+    'Transport': ['PHL_TA_HRS_WD_F_F', 'PHL_TA'] 
+  };
+
+  const relevantTypes = typeMapping[type] || [];
+  
+  const breakupData = item.timeValuation
+    .filter(tv => relevantTypes.includes(tv.timeTypeGroup) || relevantTypes.includes(tv.payTypeName))
+    .map(tv => ({
+      name: tv.payTypeExternalName || tv.timeTypeGroup || 'Allowance',
+      hoursAndMinutes: tv.hoursAndMinutes || '-',
+      approvalStatus: tv.approvalStatus || '-',
+      timeType: tv.timeTypeGroup || tv.payTypeName
+    }));
+
+  return breakupData.length > 0 ? breakupData : null;
+};
+
 const showStatusTooltip = (event, item, key) => {
     if(key==="TCH_Value"){
         key = "TCH_Status";
@@ -513,15 +540,18 @@ const showStatusTooltip = (event, item, key) => {
         key="UCH_Status";
     }
 
+    
     console.log("Key hovered: ", key);
     
     const approvedKey = `${key}LastModifiedBy`;
     const nameKey = `${key}LastModifiedByName`;
     const modifiedKey = `${key}LastModifiedAt`;
+    const status = `${key}`
 
     const approver = item[approvedKey];
     const approverName = item[nameKey];
     const modifiedDate = item[modifiedKey];
+    const StatusShow = item[status];
 
     hoveredStatusItem.value = {
         label: key,
@@ -529,6 +559,7 @@ const showStatusTooltip = (event, item, key) => {
             ? `${approver}${approverName ? ` (${approverName})` : ''}`
             : '-',
         lastModifiedBy: modifiedDate || '-',
+        Status:StatusShow || '-'
     };
 
     const tooltipWidth = 200;
@@ -837,6 +868,7 @@ const hideStatusTooltip = () => {
                                     {{ item[column.key] || "-" }}
                                 </span>
                             </template>
+
 <!-- OTHourAndMin (OT Hours) with Breakup and Status -->
 <template v-else-if="column.key === 'OTHourAndMin'">
     <span
@@ -1028,7 +1060,7 @@ const hideStatusTooltip = () => {
 
                                     <div class="flex justify-end mt-8">
                                         <button @click="showBreakupModal = false"
-                                            class="px-4 py-2 bg-red-400 text-sm font-medium text-black bg-gray-100 rounded-md hover:bg-red-600">
+                                            class="px-4 py-2 bg-red-400 text-sm font-medium text-black  rounded-md hover:bg-red-600">
                                             Close
                                         </button>
                                     </div>
@@ -1062,16 +1094,17 @@ const hideStatusTooltip = () => {
                                 </span>
                             </template>
 
-                            <!-- meal and trasnport -->
-                          <template v-else-if="column.key === 'Meal' || column.key === 'Transport'">
+<!-- meal and trasnport -->
+<template v-else-if="column.key === 'Meal' || column.key === 'Transport'">
   <div v-if="mt">
     <span 
       @mouseenter="showStatusTooltip($event, item, column.key)"
       @mouseleave="hideStatusTooltip"
+      
       :class="[
-        'px-2 py-1 rounded text-xs font-medium inline-block',
+        'px-2 py-1 rounded text-xs font-medium inline-block bg-amber-800',
         // Status-based background colors
-        item[column.key] === 'APPROVED' ? 'bg-green-100 text-green-800' : '',
+        item[column.key] === 'APPROVED' || item[column.key] === 'Approved' ? 'bg-green-100 text-green-800' : '',
         item[column.key] === 'APPLIED' || item[column.key] === 'pending' ? 'bg-orange-100 text-orange-800' : '',
         item[column.key] === 'REJECTED' ? 'bg-red-100 text-red-800' : '',
       ]">
@@ -1080,10 +1113,12 @@ const hideStatusTooltip = () => {
       </div>
     </span>
   </div>
- <div
-  @mouseenter="showStatusTooltip($event, item, column.key)"
-      @mouseleave="hideStatusTooltip"
+  <div
+    @mouseenter="showStatusTooltip($event, item, column.key)"
+    @mouseleave="hideStatusTooltip"
+      
   v-else>
+  
     {{ item[`${column.key}Hours`] || "-" }}
   </div>
 </template>
@@ -1134,7 +1169,7 @@ const hideStatusTooltip = () => {
         <!-- hover Status =>  Meal, Transport, UCH, TCH, RegStatus -->
 <div 
 v-if="hoveredStatusItem" 
-     class="fixed z-[9999999999999] h-[110px] w-[250px] bg-white tooltip-shape rounded-md p-3 text-xs "
+     class="fixed z-[9999999999999] h-[125px] w-[250px] bg-white tooltip-shape rounded-md p-3 text-xs "
      :style="{ 
          top: `${tooltipPosition.y-30}px`, 
          left: `${tooltipPosition.x-20}px`,
@@ -1143,8 +1178,11 @@ v-if="hoveredStatusItem"
     <div class="grid grid-cols-2 gap-2">
         <span class="font-medium"> Approved By:</span>
         <span>{{ hoveredStatusItem.approvedBy }}</span>
+        
         <span class="font-medium">Last Modified At:</span>
         <span>{{ hoveredStatusItem.lastModifiedBy }}</span>
+        <span class="font-medium">Status</span>
+        <span>{{hoveredStatusItem.Status}}</span>
     </div>
 </div>
 

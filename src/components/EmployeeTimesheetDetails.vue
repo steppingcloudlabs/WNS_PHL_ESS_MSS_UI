@@ -575,6 +575,29 @@ const hideStatusTooltip = () => {
     hoveredStatusItem.value = null;
 };
 
+const formatHoursWhole = (val) => {
+  if (val === null || val === undefined || val === '') return '-';
+  
+  // If it's already a number, return the whole part
+  if (!isNaN(val)) {
+    return String(Math.trunc(Number(val)));
+  }
+  
+  // If it's in "hours:minutes" format like "1:5"
+  const str = String(val);
+  const colonIndex = str.indexOf(':');
+  
+  if (colonIndex !== -1) {
+    // Extract everything before the colon (the hours part)
+    const hoursPart = str.slice(0, colonIndex);
+    return hoursPart || '-';
+  }
+  
+  // If it's some other format, try to convert to number
+  const n = Number(val);
+  return Number.isFinite(n) ? String(Math.trunc(n)) : '-';
+};
+
 </script>
 
 <template>
@@ -1109,7 +1132,7 @@ const hideStatusTooltip = () => {
         item[column.key] === 'REJECTED' ? 'bg-red-100 text-red-800' : '',
       ]">
       <div>
-        {{ item[`${column.key}Hours`] || "-" }}
+        {{ formatHoursWhole(item[`${column.key}Hours`]) }}
       </div>
     </span>
   </div>
@@ -1119,7 +1142,7 @@ const hideStatusTooltip = () => {
       
   v-else>
   
-    {{ item[`${column.key}Hours`] || "-" }}
+    {{ formatHoursWhole(item[`${column.key}Hours`]) }}
   </div>
 </template>
                             
